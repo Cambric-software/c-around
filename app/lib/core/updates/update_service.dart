@@ -7,6 +7,8 @@ import 'release_service.dart';
 import 'update_state.dart';
 import 'update_verification_service.dart';
 
+export 'release_service.dart' show ReleaseAsset;
+
 /// Full update state machine.
 ///
 /// Flow:
@@ -58,6 +60,52 @@ class UpdateService {
       _state == UpdateState.downloading ||
       _state == UpdateState.verifying ||
       _state == UpdateState.installing;
+
+  // ── static helpers ────────────────────────────────────────────────────────
+
+  /// Compares two dotted version strings numerically.
+  ///
+  /// Returns a positive integer if [a] > [b], negative if [a] < [b], 0 if
+  /// equal. Pre-release suffixes (e.g. `-beta1`) count as older than the bare
+  /// version.
+  static int compareVersions(String a, String b) {
+    // Strip pre-release suffix; pre-release < release.
+    final aPre = a.contains('-');
+    final bPre = b.contains('-');
+    final aBase = a.split('-').first;
+    final bBase = b.split('-').first;
+
+    final aParts = aBase.split('.').map(int.tryParse).toList();
+    final bParts = bBase.split('.').map(int.tryParse).toList();
+    final len = aParts.length > bParts.length ? aParts.length : bParts.length;
+
+    for (var i = 0; i < len; i++) {
+      final av = i < aParts.length ? (aParts[i] ?? 0) : 0;
+      final bv = i < bParts.length ? (bParts[i] ?? 0) : 0;
+      if (av != bv) return av.compareTo(bv);
+    }
+    // Same base version — pre-release is older.
+    if (aPre && !bPre) return -1;
+    if (!aPre && bPre) return 1;
+    return 0;
+  }
+
+  /// Parses a SHA-256 digest in `sha256:<hex>` or bare hex form.
+  ///
+  /// Returns the lower-case hex string, or `null` when the input is
+  /// malformed.
+  static String? parseDigest(String? raw) {
+    if (raw == null) return null;
+    final String hex;
+    if (raw.startsWith('sha256:')) {
+      hex = raw.substring(7).toLowerCase();
+    } else {
+      hex = raw.toLowerCase();
+    }
+    // Only accept a supported algorithm (sha256 = 64 hex chars).
+    if (!RegExp(r'^[0-9a-f]{64}$').hasMatch(hex)) return null;
+    return hex;
+  }
 
   // ── check ────────────────────────────────────────────────────────────────
 

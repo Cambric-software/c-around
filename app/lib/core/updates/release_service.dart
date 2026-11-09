@@ -27,6 +27,53 @@ class ReleaseAsset {
         'browser_download_url': url,
         'size': sizeBytes,
       };
+
+  /// Parses a checksum from a `sha256sum`-style sidecar line.
+  ///
+  /// Format: `<hash>  <filename>`. Returns `null` for unrecognised input.
+  static String? parseChecksum(String? raw) {
+    if (raw == null) return null;
+    final trimmed = raw.trim();
+    // sha256sum format: 64-char hex, two spaces, filename.
+    final match = RegExp(r'^([0-9a-fA-F]{64})\s').firstMatch(trimmed);
+    return match?.group(1)?.toLowerCase();
+  }
+
+  /// Parses a list of release assets from the GitHub API response.
+  static List<ReleaseAsset> parseAll(List<dynamic> rawList) {
+    final result = <ReleaseAsset>[];
+    for (final item in rawList) {
+      if (item is! Map<String, dynamic>) continue;
+      final name = item['name']?.toString() ?? '';
+      final url = item['browser_download_url']?.toString() ?? '';
+      if (name.isEmpty || url.isEmpty) continue;
+      result.add(ReleaseAsset(
+        name: name,
+        url: url,
+        sizeBytes: (item['size'] as num?)?.toInt() ?? 0,
+      ));
+    }
+    return result;
+  }
+
+  /// Returns the asset matching the current platform, or `null`.
+  static ReleaseAsset? forCurrentPlatform(List<ReleaseAsset> assets) {
+    bool matches(ReleaseAsset a, List<String> keywords) {
+      final lower = a.name.toLowerCase();
+      return keywords.any(lower.contains);
+    }
+
+    if (Platform.isWindows) {
+      return assets.where((a) => matches(a, ['windows', 'win'])).firstOrNull;
+    }
+    if (Platform.isLinux) {
+      return assets.where((a) => matches(a, ['linux'])).firstOrNull;
+    }
+    if (Platform.isAndroid) {
+      return assets.where((a) => matches(a, ['android', '.apk'])).firstOrNull;
+    }
+    return null;
+  }
 }
 
 /// Full metadata for a GitHub release.

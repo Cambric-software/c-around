@@ -1,22 +1,20 @@
 import 'package:flutter/material.dart';
 
-import '../features/screens/onboarding/onboarding_screen.dart';
-import 'package:cambric_design/cambric_design.dart';
+import '../features/screens/onboarding/ca_onboarding_screen.dart';
 import 'app_services.dart';
 import 'app_shell.dart';
+import 'ca_theme.dart';
 
-/// Persisted preference keys owned by the app shell.
-class AppPreferenceKeys {
-  const AppPreferenceKeys._();
-
-  /// `ThemeMode.name` for the selected theme.
+/// Shared preference keys used across the app.
+abstract class AppPreferenceKeys {
+  /// `system` / `light` / `dark`.
   static const String themeMode = 'theme_mode';
 
-  /// Whether the first-run welcome has been completed.
+  /// Whether the user has completed first-run onboarding.
   static const String onboardingComplete = 'onboarding_complete';
 }
 
-/// Resolve a stored theme name back to a [ThemeMode].
+/// Parse a stored theme name back to a [ThemeMode].
 ThemeMode themeModeFromName(String? name) {
   switch (name) {
     case 'light':
@@ -28,8 +26,7 @@ ThemeMode themeModeFromName(String? name) {
   }
 }
 
-/// The root widget. It owns the theme mode and whether the welcome flow is
-/// showing, so both can be persisted and replayed from Settings.
+/// Root widget that owns [ThemeMode] state.
 class CambricApp extends StatefulWidget {
   /// Create the app.
   const CambricApp({
@@ -39,13 +36,13 @@ class CambricApp extends StatefulWidget {
     this.initialOnboardingComplete = false,
   });
 
-  /// Services loaded in `main()`.
+  /// Application services.
   final AppServices services;
 
-  /// Theme mode read from preferences before the first frame.
+  /// Theme choice loaded from preferences before startup.
   final ThemeMode initialThemeMode;
 
-  /// Whether the welcome flow has already been completed.
+  /// Whether the user has already completed onboarding.
   final bool initialOnboardingComplete;
 
   @override
@@ -53,81 +50,54 @@ class CambricApp extends StatefulWidget {
 }
 
 class _CambricAppState extends State<CambricApp> {
-  late ThemeMode _themeMode = widget.initialThemeMode;
-  late bool _onboardingComplete = widget.initialOnboardingComplete;
+  late ThemeMode _themeMode;
+  late bool _onboardingComplete;
 
-  List<OnboardingPage> get _onboardingPages {
-    final config = widget.services.config;
-    final repository = config.repository?.trim() ?? '';
-
-    return <OnboardingPage>[
-      const OnboardingPage(
-        icon: Icons.storage_outlined,
-        title: 'Local-first by default',
-        description:
-            'User data is written to a product-scoped folder on this device. '
-            'This template never sends diagnostics anywhere unless your product '
-            'adds that step.',
-      ),
-      const OnboardingPage(
-        icon: Icons.palette_outlined,
-        title: 'A design system, not a seed colour',
-        description:
-            'The theme and widget library are shared with Cambric web and game '
-            'products, so a new app starts in the same visual language.',
-      ),
-      OnboardingPage(
-        icon: Icons.system_update_outlined,
-        title: 'Updates stay under your control',
-        description: repository.isEmpty
-            ? 'Set release.repository in cambric_config.json to connect a '
-                'GitHub release feed. Until then, the update check is disabled '
-                'rather than showing a fake result.'
-            : 'Release checks read $repository. Nothing downloads or installs '
-                'without an explicit action.',
-      ),
-    ];
+  @override
+  void initState() {
+    super.initState();
+    _themeMode = widget.initialThemeMode;
+    _onboardingComplete = widget.initialOnboardingComplete;
   }
 
-  Future<void> _completeOnboarding() async {
-    await widget.services.preferences.setBool(
-      AppPreferenceKeys.onboardingComplete,
-      true,
+  Future<void> _onThemeModeChanged(ThemeMode mode) async {
+    setState(() => _themeMode = mode);
+    final name = switch (mode) {
+      ThemeMode.light => 'light',
+      ThemeMode.dark => 'dark',
+      ThemeMode.system => 'system',
+    };
+    await widget.services.preferences.setString(
+      AppPreferenceKeys.themeMode,
+      name,
     );
-    if (!mounted) return;
+  }
+
+  void _onOnboardingComplete() {
     setState(() => _onboardingComplete = true);
   }
 
-  void _replayOnboarding() {
+  void _onReplayOnboarding() {
     setState(() => _onboardingComplete = false);
-  }
-
-  Future<void> _changeThemeMode(ThemeMode mode) async {
-    setState(() => _themeMode = mode);
-    await widget.services.preferences.setString(
-      AppPreferenceKeys.themeMode,
-      mode.name,
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
       title: widget.services.config.productName,
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
+      theme: CaTheme.light(),
+      darkTheme: CaTheme.dark(),
       themeMode: _themeMode,
       home: _onboardingComplete
           ? AppShell(
               services: widget.services,
               themeMode: _themeMode,
-              onThemeModeChanged: _changeThemeMode,
-              onReplayOnboarding: _replayOnboarding,
+              onThemeModeChanged: _onThemeModeChanged,
+              onReplayOnboarding: _onReplayOnboarding,
             )
-          : OnboardingScreen(
-              pages: _onboardingPages,
-              onComplete: _completeOnboarding,
+          : CaOnboardingScreen(
+              services: widget.services,
+              onComplete: _onOnboardingComplete,
             ),
     );
   }
