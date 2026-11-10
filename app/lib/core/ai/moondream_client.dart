@@ -67,6 +67,11 @@ Answer:{% endif %}{% endfor %}
 
   /// Start the server if it is not already answering.
   Future<bool> start() async {
+    // Moondream requires running llama-server — desktop only.
+    if (Platform.isAndroid || Platform.isIOS) {
+      _lastError = 'Scene description requires the desktop version of C Around.';
+      return false;
+    }
     if (await _healthy()) {
       return true;
     }
