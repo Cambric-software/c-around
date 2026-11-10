@@ -26,11 +26,9 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
-    <!-- Storage (Android ≤ 12): model pack downloads -->
+    <!-- Storage: READ for model packs on Android ≤ 12 -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="29"/>
 
     <!-- Foreground service: keeps awareness running while screen is off -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
@@ -47,7 +45,6 @@
         android:label="C Around"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher_round"
         android:requestLegacyExternalStorage="false"
         android:usesCleartextTraffic="false">
 

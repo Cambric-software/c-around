@@ -57,6 +57,12 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^5.0.0
 
+# Force sqflite_android to 2.4.5+1 — 2.4.6 uses VERSION_CODES.BAKLAVA
+# (Android SDK 36) and Thread.threadId() (Java 19) which are unavailable
+# in the current build environment.
+dependency_overrides:
+  sqflite_android: 2.4.4
+
 flutter:
   generate: true          # enables flutter gen-l10n
   uses-material-design: true
