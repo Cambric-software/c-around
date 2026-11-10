@@ -352,74 +352,64 @@ class _AroundScreenState extends State<AroundScreen> {
               const SizedBox(height: 14),
 
               CaSection(
-                title: 'Explain the scene',
-                description: 'Uses the optional Moondream 2 vision model on '
-                    'Windows and Linux. It answers in one short sentence.',
+                title: 'Describe the scene',
+                description: desktop
+                    ? 'Uses Moondream 2 for detailed descriptions on desktop. '
+                        'On Android, uses the bundled YOLO model.'
+                    : 'Uses the bundled object detector to describe what is in '
+                        'front of you. Tap the button — the app will speak the result.',
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    if (!desktop)
-                      const CaBanner(
-                        message: 'Scene descriptions with Moondream 2 run on '
-                            'Windows and Linux. On Android, use object scanning '
-                            'and the photo options below.',
-                      )
-                    else if (!moondreamReady) ...<Widget>[
-                      const CaBanner(
-                        message: 'Install the Moondream 2 pack once to turn on '
-                            'scene descriptions and text reading.',
-                      ),
-                      const SizedBox(height: 10),
-                      CaActionButton(
-                        icon: Icons.image_search_rounded,
-                        label: 'Use a photo instead',
-                        filled: false,
-                        onPressed: _pickPhoto,
-                      ),
-                    ] else ...<Widget>[
-                      LayoutBuilder(
-                        builder: (BuildContext context, BoxConstraints constraints) {
-                          final wide = constraints.maxWidth > 560;
-                          final buttons = <Widget>[
-                            CaActionButton(
-                              icon: Icons.visibility_rounded,
-                              label: 'Describe what is ahead',
-                              busy: awareness.isDescribing,
-                              onPressed: _describe,
-                            ),
-                            CaActionButton(
-                              icon: Icons.text_fields_rounded,
-                              label: 'Read text',
-                              filled: false,
-                              busy: awareness.isReading,
-                              onPressed: _read,
-                            ),
-                          ];
-                          if (wide) {
-                            return Row(
-                              children: <Widget>[
-                                Expanded(child: buttons[0]),
-                                const SizedBox(width: 12),
-                                Expanded(child: buttons[1]),
-                              ],
-                            );
-                          }
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                    LayoutBuilder(
+                      builder: (BuildContext context, BoxConstraints constraints) {
+                        final wide = constraints.maxWidth > 560;
+                        final buttons = <Widget>[
+                          CaActionButton(
+                            icon: Icons.visibility_rounded,
+                            label: 'Describe what is ahead',
+                            busy: awareness.isDescribing,
+                            onPressed: _describe,
+                          ),
+                          CaActionButton(
+                            icon: Icons.text_fields_rounded,
+                            label: 'Read text',
+                            filled: false,
+                            busy: awareness.isReading,
+                            onPressed: _read,
+                          ),
+                        ];
+                        if (wide) {
+                          return Row(
                             children: <Widget>[
-                              buttons[0],
-                              const SizedBox(height: 10),
-                              buttons[1],
+                              Expanded(child: buttons[0]),
+                              const SizedBox(width: 12),
+                              Expanded(child: buttons[1]),
                             ],
                           );
-                        },
-                      ),
+                        }
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: <Widget>[
+                            buttons[0],
+                            const SizedBox(height: 10),
+                            buttons[1],
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    CaActionButton(
+                      icon: Icons.image_search_rounded,
+                      label: 'Use a photo instead',
+                      filled: false,
+                      onPressed: _pickPhoto,
+                    ),
+                    if (desktop && !moondreamReady) ...<Widget>[
                       const SizedBox(height: 10),
-                      CaActionButton(
-                        icon: Icons.image_search_rounded,
-                        label: 'Use a photo instead',
-                        filled: false,
-                        onPressed: _pickPhoto,
+                      const CaBanner(
+                        message: 'Install the Moondream 2 pack in Settings → '
+                            'Model packs for richer scene descriptions on desktop.',
                       ),
                     ],
                   ],
