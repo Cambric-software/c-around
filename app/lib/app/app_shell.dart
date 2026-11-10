@@ -33,26 +33,20 @@ enum AppDestination {
 /// Responsive shell: bottom navigation on phones, a navigation rail on wide
 /// windows and desktop.
 class AppShell extends StatefulWidget {
-  /// Create the shell.
   const AppShell({
     super.key,
     required this.services,
     required this.themeMode,
     required this.onThemeModeChanged,
     required this.onReplayOnboarding,
+    this.onLocaleChanged,
   });
 
-  /// Application services, passed explicitly to each screen.
   final AppServices services;
-
-  /// Current theme choice, owned by [CambricApp].
   final ThemeMode themeMode;
-
-  /// Called when Settings changes the theme.
   final ValueChanged<ThemeMode> onThemeModeChanged;
-
-  /// Called when Settings asks to replay the welcome flow.
   final VoidCallback onReplayOnboarding;
+  final ValueChanged<Locale>? onLocaleChanged;
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -71,10 +65,11 @@ class _AppShellState extends State<AppShell> {
         return const ComponentsScreen();
       case AppDestination.settings:
         return SettingsScreen(
-          services: widget.services,
-          themeMode: widget.themeMode,
-          onThemeModeChanged: widget.onThemeModeChanged,
-          onReplayOnboarding: widget.onReplayOnboarding,
+          services:            widget.services,
+          themeMode:           widget.themeMode,
+          onThemeModeChanged:  widget.onThemeModeChanged,
+          onReplayOnboarding:  widget.onReplayOnboarding,
+          onLocaleChanged:     widget.onLocaleChanged,
         );
     }
   }

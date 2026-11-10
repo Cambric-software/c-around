@@ -1,21 +1,11 @@
 name: CI
 
-# Runs on every push to any branch and every pull request.
-# This is the primary quality gate — it must pass before merging.
-#
-# Jobs:
-#   analyze     — dart analyze (ubuntu, fast)
-#   test        — flutter test (ubuntu, fast)
-#   build-android  — APK (ubuntu)
-#   build-linux    — Linux bundle (ubuntu)
-#   build-windows  — Windows executable (windows-latest)
-
 on:
   push:
   pull_request:
 
 jobs:
-  # ── Analyze ─────────────────────────────────────────────────────────────────
+  # ── Analyze ───────────────────────────────────────────────────────────────
   analyze:
     name: Analyze
     runs-on: ubuntu-latest
@@ -30,11 +20,15 @@ jobs:
         working-directory: app
         run: flutter pub get
 
+      - name: Generate l10n
+        working-directory: app
+        run: flutter gen-l10n
+
       - name: Dart analyze
         working-directory: app
         run: flutter analyze
 
-  # ── Test ─────────────────────────────────────────────────────────────────────
+  # ── Test ──────────────────────────────────────────────────────────────────
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -49,11 +43,15 @@ jobs:
         working-directory: app
         run: flutter pub get
 
+      - name: Generate l10n
+        working-directory: app
+        run: flutter gen-l10n
+
       - name: Run tests
         working-directory: app
         run: flutter test --reporter expanded
 
-  # ── Build Android ─────────────────────────────────────────────────────────────
+  # ── Build Android (primary) ───────────────────────────────────────────────
   build-android:
     name: Build Android
     runs-on: ubuntu-latest
@@ -74,9 +72,13 @@ jobs:
         working-directory: app
         run: flutter pub get
 
-      - name: Build APK
+      - name: Generate l10n
         working-directory: app
-        run: flutter build apk --release
+        run: flutter gen-l10n
+
+      - name: Build universal APK
+        working-directory: app
+        run: flutter build apk --release --target-platform android-arm64
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
@@ -85,7 +87,7 @@ jobs:
           path: app/build/app/outputs/flutter-apk/app-release.apk
           retention-days: 7
 
-  # ── Build Linux ───────────────────────────────────────────────────────────────
+  # ── Build Linux ───────────────────────────────────────────────────────────
   build-linux:
     name: Build Linux
     runs-on: ubuntu-latest
@@ -108,6 +110,10 @@ jobs:
         working-directory: app
         run: flutter pub get
 
+      - name: Generate l10n
+        working-directory: app
+        run: flutter gen-l10n
+
       - name: Build Linux
         working-directory: app
         run: flutter build linux --release
@@ -119,7 +125,7 @@ jobs:
           path: app/build/linux/x64/release/bundle
           retention-days: 7
 
-  # ── Build Windows ─────────────────────────────────────────────────────────────
+  # ── Build Windows ─────────────────────────────────────────────────────────
   build-windows:
     name: Build Windows
     runs-on: windows-latest
@@ -134,6 +140,10 @@ jobs:
       - name: Install dependencies
         working-directory: app
         run: flutter pub get
+
+      - name: Generate l10n
+        working-directory: app
+        run: flutter gen-l10n
 
       - name: Build Windows
         working-directory: app

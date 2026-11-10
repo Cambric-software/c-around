@@ -8,43 +8,34 @@ import 'ca_theme.dart';
 
 /// Shared preference keys used across the app.
 abstract class AppPreferenceKeys {
-  /// `system` / `light` / `dark`.
-  static const String themeMode = 'theme_mode';
-
-  /// Whether the user has completed first-run onboarding.
+  static const String themeMode    = 'theme_mode';
   static const String onboardingComplete = 'onboarding_complete';
+  static const String language     = 'app_language';
 }
 
 /// Parse a stored theme name back to a [ThemeMode].
 ThemeMode themeModeFromName(String? name) {
   switch (name) {
-    case 'light':
-      return ThemeMode.light;
-    case 'dark':
-      return ThemeMode.dark;
-    default:
-      return ThemeMode.system;
+    case 'light':  return ThemeMode.light;
+    case 'dark':   return ThemeMode.dark;
+    default:       return ThemeMode.system;
   }
 }
 
-/// Root widget that owns [ThemeMode] state.
+/// Root widget — owns theme, locale and onboarding state.
 class CambricApp extends StatefulWidget {
-  /// Create the app.
   const CambricApp({
     super.key,
     required this.services,
     this.initialThemeMode = ThemeMode.system,
     this.initialOnboardingComplete = false,
+    this.initialLocale,
   });
 
-  /// Application services.
   final AppServices services;
-
-  /// Theme choice loaded from preferences before startup.
   final ThemeMode initialThemeMode;
-
-  /// Whether the user has already completed onboarding.
   final bool initialOnboardingComplete;
+  final Locale? initialLocale;
 
   @override
   State<CambricApp> createState() => _CambricAppState();
@@ -52,64 +43,66 @@ class CambricApp extends StatefulWidget {
 
 class _CambricAppState extends State<CambricApp> {
   late ThemeMode _themeMode;
-  late bool _onboardingComplete;
+  late bool      _onboardingComplete;
+  Locale?        _locale;   // null = use device locale
+
+  static const List<Locale> _supported = <Locale>[
+    Locale('en'),
+    Locale('ar'),
+    Locale('fr'),
+    Locale('de'),
+  ];
 
   @override
   void initState() {
     super.initState();
-    _themeMode = widget.initialThemeMode;
+    _themeMode          = widget.initialThemeMode;
     _onboardingComplete = widget.initialOnboardingComplete;
+    _locale             = widget.initialLocale;
   }
 
   Future<void> _onThemeModeChanged(ThemeMode mode) async {
     setState(() => _themeMode = mode);
     final name = switch (mode) {
-      ThemeMode.light => 'light',
-      ThemeMode.dark => 'dark',
+      ThemeMode.light  => 'light',
+      ThemeMode.dark   => 'dark',
       ThemeMode.system => 'system',
     };
-    await widget.services.preferences.setString(
-      AppPreferenceKeys.themeMode,
-      name,
-    );
+    await widget.services.preferences.setString(AppPreferenceKeys.themeMode, name);
   }
 
-  void _onOnboardingComplete() {
-    setState(() => _onboardingComplete = true);
+  Future<void> _onLocaleChanged(Locale locale) async {
+    setState(() => _locale = locale);
+    await widget.services.preferences.setString(AppPreferenceKeys.language, locale.languageCode);
   }
 
-  void _onReplayOnboarding() {
-    setState(() => _onboardingComplete = false);
-  }
+  void _onOnboardingComplete() => setState(() => _onboardingComplete = true);
+  void _onReplayOnboarding()   => setState(() => _onboardingComplete = false);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: widget.services.config.productName,
-      theme: CaTheme.light(),
-      darkTheme: CaTheme.dark(),
-      themeMode: _themeMode,
-      // Localizations — English (default), Arabic, French, German
+      theme:      CaTheme.light(),
+      darkTheme:  CaTheme.dark(),
+      themeMode:  _themeMode,
+      locale:     _locale,
+      supportedLocales: _supported,
       localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const <Locale>[
-        Locale('en'),           // English — default
-        Locale('ar'),           // Arabic (RTL)
-        Locale('fr'),           // French
-        Locale('de'),           // German
-      ],
       home: _onboardingComplete
           ? AppShell(
-              services: widget.services,
-              themeMode: _themeMode,
-              onThemeModeChanged: _onThemeModeChanged,
-              onReplayOnboarding: _onReplayOnboarding,
+              services:            widget.services,
+              themeMode:           _themeMode,
+              onThemeModeChanged:  _onThemeModeChanged,
+              onReplayOnboarding:  _onReplayOnboarding,
+              onLocaleChanged:     _onLocaleChanged,
             )
           : CaOnboardingScreen(
-              services: widget.services,
+              services:   widget.services,
               onComplete: _onOnboardingComplete,
             ),
     );

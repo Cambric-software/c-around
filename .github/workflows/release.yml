@@ -28,6 +28,10 @@ jobs:
         working-directory: app
         run: flutter pub get
 
+      - name: Generate l10n
+        working-directory: app
+        run: flutter gen-l10n
+
       - name: Analyze
         working-directory: app
         run: flutter analyze
@@ -81,6 +85,10 @@ jobs:
         working-directory: app
         run: flutter pub get
 
+      - name: Generate l10n
+        working-directory: app
+        run: flutter gen-l10n
+
       - name: Build Windows
         working-directory: app
         run: flutter build windows --release
@@ -119,6 +127,10 @@ jobs:
       - name: Install Flutter dependencies
         working-directory: app
         run: flutter pub get
+
+      - name: Generate l10n
+        working-directory: app
+        run: flutter gen-l10n
 
       - name: Build Linux
         working-directory: app

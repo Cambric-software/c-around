@@ -512,12 +512,8 @@ class _AroundScreenState extends State<AroundScreen> {
                               SettingsScreen(
                                 services: _services,
                                 themeMode: ThemeMode.system,
-                                onThemeModeChanged: (ThemeMode mode) {
-                                  // Theme mode changed
-                                },
-                                onReplayOnboarding: () {
-                                  // Replay onboarding
-                                },
+                                onThemeModeChanged: (ThemeMode mode) {},
+                                onReplayOnboarding: () {},
                               ),
                         ),
                       ),
