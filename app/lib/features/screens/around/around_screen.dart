@@ -7,7 +7,6 @@ import '../../../app/app_services.dart';
 import '../../../core/data/models.dart';
 import '../../widgets/ca_widgets.dart';
 import '../../widgets/model_pack_card.dart';
-import '../settings/settings_screen.dart';
 
 /// The main screen: describe, read, scan and listen.
 class AroundScreen extends StatefulWidget {
@@ -505,21 +504,6 @@ class _AroundScreenState extends State<AroundScreen> {
                       style: theme.textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 10),
-                    TextButton.icon(
-                      onPressed: () => Navigator.of(context).push<void>(
-                        MaterialPageRoute<void>(
-                          builder: (BuildContext context) =>
-                              SettingsScreen(
-                                services: _services,
-                                themeMode: ThemeMode.system,
-                                onThemeModeChanged: (ThemeMode mode) {},
-                                onReplayOnboarding: () {},
-                              ),
-                        ),
-                      ),
-                      icon: const Icon(Icons.tune_rounded),
-                      label: const Text('Open settings'),
-                    ),
                   ],
                 ),
               ),

@@ -19,7 +19,7 @@ void main() {
     SharedPreferences.setMockInitialValues(<String, Object>{});
   });
 
-  testWidgets('app shell renders Home for a returning user', (tester) async {
+  testWidgets('app shell renders navigation tabs', (tester) async {
     final svc = await AppServices.forTest(_config);
     await tester.pumpWidget(
       CambricApp(
@@ -29,7 +29,9 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('Home'), findsWidgets);
+    // The shell shows the bottom nav — these labels are always visible.
+    expect(find.text('Around'), findsWidgets);
+    expect(find.text('Settings'), findsWidgets);
   });
 
   testWidgets('first launch shows onboarding', (tester) async {

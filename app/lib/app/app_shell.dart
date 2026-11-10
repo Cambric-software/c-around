@@ -1,37 +1,27 @@
 import 'package:flutter/material.dart';
 
-import '../features/screens/components/components_screen.dart';
-import '../features/screens/home/home_screen.dart';
+import '../features/screens/around/around_screen.dart';
+import '../features/screens/emergency/emergency_screen.dart';
+import '../features/screens/navigate/navigate_screen.dart';
+import '../features/screens/people/people_screen.dart';
 import '../features/screens/settings/settings_screen.dart';
-import 'package:cambric_design/cambric_design.dart';
-import '../features/widgets/cambric_version_label.dart';
+import '../features/screens/talk/talk_screen.dart';
 import 'app_services.dart';
 
-/// The three top-level places in the template.
-enum AppDestination {
-  /// What the template gives you, with live values.
-  home('Home', Icons.home_outlined, Icons.home_rounded),
+enum _Dest {
+  around(   'Around',    Icons.visibility_outlined,   Icons.visibility_rounded),
+  talk(     'Talk',      Icons.chat_bubble_outline,   Icons.chat_bubble_rounded),
+  people(   'People',    Icons.people_outline,        Icons.people_rounded),
+  navigate( 'Navigate',  Icons.explore_outlined,      Icons.explore_rounded),
+  emergency('Emergency', Icons.emergency_outlined,    Icons.emergency_rounded),
+  settings( 'Settings',  Icons.settings_outlined,     Icons.settings_rounded);
 
-  /// The living component gallery.
-  components('Components', Icons.widgets_outlined, Icons.widgets_rounded),
-
-  /// Theme, cache, diagnostics and onboarding.
-  settings('Settings', Icons.settings_outlined, Icons.settings_rounded);
-
-  const AppDestination(this.label, this.icon, this.selectedIcon);
-
-  /// Label shown in the navigation.
+  const _Dest(this.label, this.icon, this.selectedIcon);
   final String label;
-
-  /// Unselected icon.
   final IconData icon;
-
-  /// Selected icon.
   final IconData selectedIcon;
 }
 
-/// Responsive shell: bottom navigation on phones, a navigation rail on wide
-/// windows and desktop.
 class AppShell extends StatefulWidget {
   const AppShell({
     super.key,
@@ -54,120 +44,92 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _index = 0;
-
-  AppDestination get _destination => AppDestination.values[_index];
+  _Dest get _dest => _Dest.values[_index];
 
   Widget _screen() {
-    switch (_destination) {
-      case AppDestination.home:
-        return HomeScreen(services: widget.services);
-      case AppDestination.components:
-        return const ComponentsScreen();
-      case AppDestination.settings:
+    // Some screens access platform services (camera, awareness, announcer)
+    // that are only initialized after AppServices.initialize() completes.
+    // Show a simple loading view if they are not ready yet.
+    if (!widget.services.isFullyInitialized) {
+      switch (_dest) {
+        case _Dest.around:
+        case _Dest.talk:
+        case _Dest.people:
+        case _Dest.emergency:
+          return _NotReadyScreen(label: _dest.label);
+        default:
+          break;
+      }
+    }
+
+    switch (_dest) {
+      case _Dest.around:
+        return AroundScreen(services: widget.services);
+      case _Dest.talk:
+        return TalkScreen(services: widget.services);
+      case _Dest.people:
+        return PeopleScreen(services: widget.services);
+      case _Dest.navigate:
+        return NavigateScreen(services: widget.services);
+      case _Dest.emergency:
+        return EmergencyScreen(services: widget.services);
+      case _Dest.settings:
         return SettingsScreen(
-          services:            widget.services,
-          themeMode:           widget.themeMode,
-          onThemeModeChanged:  widget.onThemeModeChanged,
-          onReplayOnboarding:  widget.onReplayOnboarding,
-          onLocaleChanged:     widget.onLocaleChanged,
+          services:           widget.services,
+          themeMode:          widget.themeMode,
+          onThemeModeChanged: widget.onThemeModeChanged,
+          onReplayOnboarding: widget.onReplayOnboarding,
+          onLocaleChanged:    widget.onLocaleChanged,
         );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final width = MediaQuery.sizeOf(context).width;
-    final usesRail = Breakpoints.usesRail(width);
-
-    if (!usesRail) {
-      return Scaffold(
-        body: _screen(),
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: _index,
-          onDestinationSelected: (i) => setState(() => _index = i),
-          destinations: <Widget>[
-            for (final destination in AppDestination.values)
-              NavigationDestination(
-                icon: Icon(destination.icon),
-                selectedIcon: Icon(destination.selectedIcon),
-                label: destination.label,
-              ),
-          ],
-        ),
-      );
-    }
+    final destinations = _Dest.values.map((_Dest d) =>
+      NavigationDestination(
+        icon: Icon(d.icon),
+        selectedIcon: Icon(d.selectedIcon),
+        label: d.label,
+      ),
+    ).toList();
 
     return Scaffold(
-      body: Row(
-        children: <Widget>[
-          Material(
-            color: theme.colorScheme.surface,
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  right: BorderSide(color: theme.colorScheme.outline),
-                ),
-              ),
-              child: NavigationRail(
-              selectedIndex: _index,
-              onDestinationSelected: (i) => setState(() => _index = i),
-              labelType: NavigationRailLabelType.all,
-              leading: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  Space.sm,
-                  Space.lg,
-                  Space.sm,
-                  Space.xl,
-                ),
-                child: Column(
-                  children: <Widget>[
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary,
-                        borderRadius: BorderRadius.circular(Radii.button),
-                      ),
-                      child: Icon(
-                        Icons.layers_rounded,
-                        size: 20,
-                        color: theme.colorScheme.onPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: Space.sm),
-                    SizedBox(
-                      width: 84,
-                      child: Text(
-                        widget.services.config.productName,
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              trailing: Padding(
-                padding: const EdgeInsets.only(bottom: Space.lg),
-                child: CambricVersionLabel(
-                  version: widget.services.version.versionString,
-                ),
-              ),
-              destinations: <NavigationRailDestination>[
-                for (final destination in AppDestination.values)
-                  NavigationRailDestination(
-                    icon: Icon(destination.icon),
-                    selectedIcon: Icon(destination.selectedIcon),
-                    label: Text(destination.label),
-                  ),
-              ],
+      body: _screen(),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _index,
+        onDestinationSelected: (int i) => setState(() => _index = i),
+        destinations: destinations,
+        labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+      ),
+    );
+  }
+}
+
+class _NotReadyScreen extends StatelessWidget {
+  const _NotReadyScreen({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            const CircularProgressIndicator(),
+            const SizedBox(height: 20),
+            Text(
+              'Starting $label…',
+              style: Theme.of(context).textTheme.bodyLarge,
             ),
+            const SizedBox(height: 8),
+            Text(
+              'Loading models and services',
+              style: Theme.of(context).textTheme.bodySmall,
             ),
-          ),
-          Expanded(child: _screen()),
-        ],
+          ],
+        ),
       ),
     );
   }
