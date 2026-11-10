@@ -216,6 +216,109 @@ class SpeechStrings {
     return 'Alert: $soundName.';
   }
 
+  String fireAlarm() {
+    if (_isAr) return 'إنذار حريق!';
+    if (_isFr) return 'Alarme incendie !';
+    if (_isDe) return 'Feueralarm!';
+    return 'Fire alarm detected.';
+  }
+
+  String siren() {
+    if (_isAr) return 'صفارة إنذار قريبة.';
+    if (_isFr) return 'Sirène à proximité.';
+    if (_isDe) return 'Sirene in der Nähe.';
+    return 'Siren nearby.';
+  }
+
+  String glassShattering() {
+    if (_isAr) return 'كسر زجاج.';
+    if (_isFr) return 'Bris de verre.';
+    if (_isDe) return 'Glas zerbricht.';
+    return 'Glass breaking.';
+  }
+
+  String gunshot() {
+    if (_isAr) return 'صوت طلق ناري محتمل.';
+    if (_isFr) return 'Possible coup de feu.';
+    if (_isDe) return 'Möglicher Schuss.';
+    return 'Possible gunshot.';
+  }
+
+  String carHorn() {
+    if (_isAr) return 'بوق سيارة قريب.';
+    if (_isFr) return 'Klaxon à proximité.';
+    if (_isDe) return 'Hupe in der Nähe.';
+    return 'Car horn nearby.';
+  }
+
+  String babyCrying() {
+    if (_isAr) return 'طفل يبكي قريباً.';
+    if (_isFr) return 'Bébé qui pleure à proximité.';
+    if (_isDe) return 'Baby weint in der Nähe.';
+    return 'Baby crying nearby.';
+  }
+
+  String dogBarking() {
+    if (_isAr) return 'كلب ينبح قريباً.';
+    if (_isFr) return 'Chien qui aboie à proximité.';
+    if (_isDe) return 'Hund bellt in der Nähe.';
+    return 'Dog barking nearby.';
+  }
+
+  String shouting() {
+    if (_isAr) return 'شخص يصرخ قريباً.';
+    if (_isFr) return 'Quelqu\'un crie à proximité.';
+    if (_isDe) return 'Jemand schreit in der Nähe.';
+    return 'Someone shouting nearby.';
+  }
+
+  String alarmClock() {
+    if (_isAr) return 'المنبّه يرنّ.';
+    if (_isFr) return 'Réveil qui sonne.';
+    if (_isDe) return 'Wecker klingelt.';
+    return 'Alarm clock ringing.';
+  }
+
+  String doorbell() {
+    if (_isAr) return 'جرس الباب.';
+    if (_isFr) return 'Sonnette.';
+    if (_isDe) return 'Türklingel.';
+    return 'Doorbell.';
+  }
+
+  String knocking() {
+    if (_isAr) return 'طرق على الباب.';
+    if (_isFr) return 'On frappe à la porte.';
+    if (_isDe) return 'Es klopft.';
+    return 'Knocking.';
+  }
+
+  String thunder() {
+    if (_isAr) return 'رعد قريب.';
+    if (_isFr) return 'Tonnerre à proximité.';
+    if (_isDe) return 'Donner in der Nähe.';
+    return 'Thunder nearby.';
+  }
+
+  /// Translate a sound alert kind to a spoken sentence.
+  String soundKind(String kind) {
+    switch (kind) {
+      case 'fire_alarm': return fireAlarm();
+      case 'siren':      return siren();
+      case 'glass':      return glassShattering();
+      case 'gunshot':    return gunshot();
+      case 'horn':       return carHorn();
+      case 'baby':       return babyCrying();
+      case 'dog':        return dogBarking();
+      case 'shout':      return shouting();
+      case 'alarm_clock':return alarmClock();
+      case 'doorbell':   return doorbell();
+      case 'knock':      return knocking();
+      case 'thunder':    return thunder();
+      default:           return soundAlert(kind);
+    }
+  }
+
   // ── Onboarding / System ───────────────────────────────────────────────────
 
   String welcome() {

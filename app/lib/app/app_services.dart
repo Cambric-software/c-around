@@ -230,6 +230,7 @@ class AppServices {
       classifier: YamnetClassifier(),
       announcer: announcer,
       microphone: microphone,
+      settings: settings,
     );
     featureFlags = const FeatureFlagService({});
     appLock = AppLockService(prefs);

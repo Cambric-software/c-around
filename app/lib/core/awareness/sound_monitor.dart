@@ -5,19 +5,17 @@ import 'package:flutter/foundation.dart';
 import '../ai/sound_classifier.dart';
 import '../ai/speech_recognizer.dart';
 import '../output/announcer.dart';
+import '../output/speech_strings.dart';
+import '../settings/settings_service.dart';
 import 'microphone_source.dart';
 
 /// Listens to the microphone and announces recognised sounds.
-///
-/// Audio never leaves the device. Chunks from [MicrophoneSource] are converted
-/// to float samples, classified by YAMNet, and only the classes mapped in
-/// `sound_events.dart` are announced; everything else is ignored so the user is
-/// not trained to ignore the alerts that matter.
 class SoundMonitor extends ChangeNotifier {
   SoundMonitor({
     required this.classifier,
     required this.announcer,
     required this.microphone,
+    required this.settings,
   });
 
   /// Bundled YAMNet classifier.
@@ -28,6 +26,11 @@ class SoundMonitor extends ChangeNotifier {
 
   /// Shared microphone.
   final MicrophoneSource microphone;
+
+  /// User settings — used to pick speech language.
+  final SettingsService settings;
+
+  SpeechStrings get _strings => SpeechStrings(settings.speechLanguage);
 
   StreamSubscription<Uint8List>? _subscription;
   final List<int> _pcm = <int>[];
@@ -126,9 +129,11 @@ class SoundMonitor extends ChangeNotifier {
       for (final hit in hits) {
         final alert = hit.alert;
         if (alert == null) continue;
+        // Use translated message based on user's speech language.
+        final message = _strings.soundKind(alert.kind);
         await announcer.announce(
           kind: alert.kind,
-          message: alert.message,
+          message: message,
           level: alert.level,
           source: 'sound',
         );

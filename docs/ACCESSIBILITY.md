@@ -1,75 +1,112 @@
-# Accessibility
+# Accessibility — C Around v1.0.3
 
-C Around is built for five overlapping groups: blind, low-vision, deaf,
-hard-of-hearing and non-verbal people. A person can select more than one need,
-and every default can be overridden.
+C Around is built specifically for blind, deaf, hard-of-hearing and non-verbal users. This document describes how every output channel works.
 
-## Needs and defaults
+---
 
-| Need | What changes |
+## First launch — choose your needs
+
+The welcome screen asks you to select your accessibility needs. C Around adjusts its defaults automatically:
+
+| Need | Default changes |
 |---|---|
-| Blind | Speech on, haptics on, larger text, screen-reader announcements |
-| Low vision | High contrast, larger text, stronger borders |
-| Deaf | Flash on, haptics on, audible emergency tone off |
-| Hard of hearing | Captions on, visual alerts |
-| Non-verbal | Phrases and cards ready, text-to-speech available |
+| **Blind** | Speech on, haptics on, text scale increased |
+| **Low vision** | High contrast on, text scale increased |
+| **Deaf** | Screen flash on, haptics on, audio alerts off |
+| **Hard of hearing** | Screen flash on, haptics on |
+| **Non-verbal** | Speech on (for AAC output) |
 
-The needs page says explicitly that this is not a diagnosis and that nothing is
-permanent.
+You can change every setting individually in Settings at any time.
 
-## Output rules
+---
 
-Every observation goes through `Announcer`, which decides what is spoken, felt,
-flashed and stored. That is why the cooldown and the "do not repeat the same
-sentence" rule apply on every screen.
+## Output channels
 
-- **Speech** can be turned off. Warnings and danger still reach the screen,
-  vibration and flash.
-- **Vibration** uses a different pattern for warning and danger.
-- **Flash** is a short colour pulse, not a strobe. It is intended for deaf and
-  hard-of-hearing users and can be turned off.
-- **Screen reader** users get the same sentence as a live-region announcement
-  through the platform semantics service, so TalkBack or Narrator is not
-  dependent on the app's own voice.
-- **Captions** are shown in large text with the same contrast rules as the rest
-  of the app and are stored locally for review.
+### 1. Spoken output (TTS)
+- Uses the Android/Windows/Linux platform TTS engine
+- Language: set in **Settings → Speech → Voice language** — Arabic, French, German, English
+- Rate and pitch: adjustable in Settings
+- All spoken messages are translated — the app never reads English words when Arabic is selected
 
-## Visual design
+### 2. Vibration
+- Danger alerts: long triple pulse
+- Warning alerts: short double pulse
+- Controlled by **Settings → Accessibility → Vibration alerts**
 
-- The page is near-black or near-white, never mid-grey.
-- The primary teal clears 4.5:1 on both light and dark surfaces.
-- Amber is only used for a warning that is also carried by an icon and a word,
-  so colour is never the only signal.
-- High contrast is a separate palette, not an opacity switch.
-- Text scale goes from 90% to 200%.
-- Touch targets are at least 44–56 px high.
-- The camera preview is optional; every action also works from a chosen photo.
+### 3. Screen flash
+- Full-screen colour pulse for every alert
+- For users who cannot hear sound
+- Controlled by **Settings → Accessibility → Screen flash alerts**
 
-## Emergency
+### 4. Semantic accessibility
+- Every screen announces its content to screen readers (TalkBack on Android)
+- All interactive elements have accessible labels
+- Text sizes respect system font scale and the in-app text scale setting
 
-A red **SOS** button is in every app bar. It opens the emergency screen, which
-has a loud alarm, a medical card, the emergency contact and a call action. The
-emergency screen does not show a second SOS button.
+---
 
-## Microphone and camera
+## What gets spoken and when
 
-One `MicrophoneSource` is shared by sound alerts and captions through reference
-counting, so the app does not fight the operating system for the microphone.
-The camera uses still capture on a timer rather than a continuous stream, which
-keeps it working across desktop and mobile backends and makes each scan a
-bounded unit of work.
+### Continuous camera awareness (Around screen)
 
-## Language
+| Event | Spoken (English) | Level |
+|---|---|---|
+| Car/truck/bus ahead | "Car ahead." | Danger |
+| Person very close | "Person very close, on your left." | Warning |
+| Person detected | "Person ahead." | Info |
+| Dog detected | "Dog on your right." | Warning |
+| Sharp object | "Sharp object ahead." | Warning |
+| Obstacle | "Obstacle ahead." | Warning |
+| Enrolled face | "Sara is on your left." | Info |
 
-The interface is English in 1.0. Speech output can use another installed system
-voice, and the caption model is multilingual, but the UI strings are English.
-The app does not claim a translated interface.
+### Sound monitor
 
-## Testing accessibility changes
+| Sound | Spoken | Level |
+|---|---|---|
+| Fire/smoke alarm | "Fire alarm detected." | Danger |
+| Siren | "Siren nearby." | Danger |
+| Breaking glass | "Glass breaking." | Danger |
+| Car horn | "Car horn nearby." | Warning |
+| Dog barking | "Dog barking nearby." | Warning |
+| Shouting | "Someone shouting nearby." | Warning |
+| Doorbell | "Doorbell." | Info |
+| Knocking | "Knocking." | Info |
 
-1. Run with a screen reader on each platform.
-2. Turn speech off and confirm warnings still appear as text, flash and haptics.
-3. Set text scale to 200% and check that no button or label is clipped.
-4. Turn on high contrast in both light and dark mode.
-5. Trigger a danger alert and confirm it is not conveyed by colour alone.
-6. Open Emergency from every tab.
+All messages above are translated when you select Arabic, French, or German.
+
+### Announcement cooldown
+
+Repeated identical announcements are suppressed for 6 seconds (adjustable in Settings → Accessibility → Announcement cooldown). Danger alerts use half the cooldown.
+
+---
+
+## Emergency card
+
+The emergency card shows:
+- Your name, blood type, medical conditions, allergies, medications
+- Emergency contact name and phone number
+
+It can be opened with one tap from the Emergency tab. No unlock required.
+
+Set it up in **Settings → Medical card**.
+
+---
+
+## AAC / Talk
+
+The Talk screen provides:
+- **Quick cards** — most-used phrases tapped to speak instantly
+- **All phrases** — full phrase bank organised by category
+- **Free text** — type anything, tap Speak
+- Phrases: "I need help", "I need water", "I am in pain", "Please call my family" (10 seeded, unlimited user-added)
+
+---
+
+## Supported languages
+
+| Language | UI | Spoken output |
+|---|---|---|
+| English | ✅ | ✅ |
+| Arabic (RTL) | ✅ | ✅ |
+| French | ✅ | ✅ |
+| German | ✅ | ✅ |
