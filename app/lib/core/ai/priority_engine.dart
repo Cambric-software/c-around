@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import '../data/models.dart';
+import '../output/speech_strings.dart';
 
 /// One object detected in a frame.
 ///
@@ -117,7 +118,9 @@ class PriorityEngine {
   List<Hazard> evaluate(
     List<Detection> detections, {
     double confidenceThreshold = 0.45,
+    SpeechStrings? strings,
   }) {
+    final s = strings ?? const SpeechStrings('en');
     final hazards = <String, Hazard>{};
 
     void add(Hazard hazard) {
@@ -131,100 +134,84 @@ class PriorityEngine {
     for (final detection in detections) {
       if (detection.confidence < confidenceThreshold) continue;
       final label = detection.label.toLowerCase();
-      final direction = detection.direction;
+      final dir = s.direction(detection.centerX);
       final close = detection.height >= 0.32;
       final veryClose = detection.height >= 0.55;
 
       if (label == 'person') {
-        add(
-          Hazard(
-            kind: 'person',
-            message: close
-                ? 'Person very close, $direction.'
-                : 'Person $direction.',
-            level: veryClose ? AwarenessLevel.warning : AwarenessLevel.info,
-            direction: direction,
-            score: detection.confidence,
-          ),
-        );
+        add(Hazard(
+          kind: 'person',
+          message: close ? s.personClose(dir) : s.person(dir),
+          level: veryClose ? AwarenessLevel.warning : AwarenessLevel.info,
+          direction: dir,
+          score: detection.confidence,
+        ));
         continue;
       }
 
       if (_vehicles.contains(label)) {
-        add(
-          Hazard(
-            kind: label,
-            message: '${_label(label)} $direction.',
-            level: close ? AwarenessLevel.danger : AwarenessLevel.warning,
-            direction: direction,
-            score: detection.confidence,
-          ),
-        );
+        add(Hazard(
+          kind: label,
+          message: s.vehicle(label, dir),
+          level: close ? AwarenessLevel.danger : AwarenessLevel.warning,
+          direction: dir,
+          score: detection.confidence,
+        ));
         continue;
       }
 
       if (label == 'dog') {
-        add(
-          Hazard(
-            kind: 'dog',
-            message: 'Dog $direction.',
-            level: AwarenessLevel.warning,
-            direction: direction,
-            score: detection.confidence,
-          ),
-        );
+        add(Hazard(
+          kind: 'dog',
+          message: s.dog(dir),
+          level: AwarenessLevel.warning,
+          direction: dir,
+          score: detection.confidence,
+        ));
         continue;
       }
 
       if (label == 'knife' || label == 'scissors') {
-        add(
-          Hazard(
-            kind: 'sharp',
-            message: 'Sharp object $direction.',
-            level: AwarenessLevel.warning,
-            direction: direction,
-            score: detection.confidence,
-          ),
-        );
+        add(Hazard(
+          kind: 'sharp',
+          message: s.sharpObject(dir),
+          level: AwarenessLevel.warning,
+          direction: dir,
+          score: detection.confidence,
+        ));
         continue;
       }
 
       if (_obstacles.contains(label) && detection.bottom > 0.55) {
-        add(
-          Hazard(
-            kind: 'obstacle',
-            message: 'Obstacle $direction.',
-            level: close ? AwarenessLevel.warning : AwarenessLevel.info,
-            direction: direction,
-            score: detection.confidence,
-          ),
-        );
+        add(Hazard(
+          kind: 'obstacle',
+          message: s.obstacle(dir),
+          level: close ? AwarenessLevel.warning : AwarenessLevel.info,
+          direction: dir,
+          score: detection.confidence,
+        ));
         continue;
       }
 
       if (label == 'traffic light') {
-        add(
-          Hazard(
-            kind: 'traffic_light',
-            message: 'Traffic light $direction.',
-            level: AwarenessLevel.info,
-            direction: direction,
-            score: detection.confidence,
-          ),
-        );
+        add(Hazard(
+          kind: 'traffic_light',
+          message: s.vehicle('traffic light', dir),
+          level: AwarenessLevel.info,
+          direction: dir,
+          score: detection.confidence,
+        ));
         continue;
       }
 
       if (label == 'stop sign') {
-        add(
-          Hazard(
-            kind: 'stop_sign',
-            message: 'Stop sign $direction.',
-            level: AwarenessLevel.warning,
-            direction: direction,
-            score: detection.confidence,
-          ),
-        );
+        add(Hazard(
+          kind: 'stop_sign',
+          message: s.vehicle('stop sign', dir),
+          level: AwarenessLevel.warning,
+          direction: dir,
+          score: detection.confidence,
+        ));
         continue;
       }
 
@@ -233,15 +220,13 @@ class PriorityEngine {
           label == 'suitcase' ||
           label == 'bottle' ||
           label == 'cup') {
-        add(
-          Hazard(
-            kind: 'object',
-            message: '${_label(label)} $direction.',
-            level: AwarenessLevel.info,
-            direction: direction,
-            score: detection.confidence,
-          ),
-        );
+        add(Hazard(
+          kind: 'object',
+          message: s.vehicle(label, dir),
+          level: AwarenessLevel.info,
+          direction: dir,
+          score: detection.confidence,
+        ));
       }
     }
 
@@ -256,6 +241,7 @@ class PriorityEngine {
   }
 
   /// English label for a COCO class.
+  // ignore: unused_element
   static String _label(String label) {
     if (label.isEmpty) return 'Object';
     return label[0].toUpperCase() + label.substring(1);

@@ -9,6 +9,7 @@ import '../ai/yolo_detector.dart';
 import '../data/ca_database.dart';
 import '../data/models.dart';
 import '../output/announcer.dart';
+import '../output/speech_strings.dart';
 import '../settings/settings_service.dart';
 import '../vision/camera_frame_source.dart';
 
@@ -95,6 +96,9 @@ class AwarenessController extends ChangeNotifier {
   /// Number of enrolled people loaded for matching.
   int get knownPeopleCount => _people.length;
 
+  /// Speech strings in the user's language.
+  SpeechStrings get _strings => SpeechStrings(settings.speechLanguage);
+
   /// Start the camera and the scan timer.
   Future<bool> start() async {
     if (_running) return true;
@@ -175,6 +179,7 @@ class AwarenessController extends ChangeNotifier {
       final hazards = const PriorityEngine().evaluate(
         vision.detections,
         confidenceThreshold: settings.detectionConfidence,
+        strings: _strings,
       );
       _hazards = hazards;
 
@@ -219,14 +224,10 @@ class AwarenessController extends ChangeNotifier {
         final vector = await faces.embed(bytes, box);
         final match = FaceRecognizer.bestMatch(face: vector, people: _people);
         if (match == null) continue;
-        final direction = box.left + box.width / 2 < 0.34
-            ? 'on your left'
-            : box.left + box.width / 2 > 0.66
-                ? 'on your right'
-                : 'ahead';
+        final cx = box.left + box.width / 2;
         await announcer.announce(
           kind: 'face_${match.personId}',
-          message: '${match.name} is $direction.',
+          message: _strings.faceRecognised(match.name, _strings.direction(cx)),
           level: AwarenessLevel.info,
           source: 'face',
         );
@@ -370,15 +371,15 @@ class AwarenessController extends ChangeNotifier {
   Future<String> _yoloDescription(Uint8List bytes) async {
     await detector.load();
     if (!detector.isReady) {
-      return 'The camera sees something but the vision model is not loaded yet.';
+      return _strings.modelNotLoaded();
     }
     try {
       final vision = await detector.detect(bytes);
       if (vision.detections.isEmpty) {
-        return 'Nothing specific detected in front of you right now.';
+        return _strings.nothingDetected();
       }
 
-      // Sort by confidence, take top 5.
+      final s = _strings;
       final sorted = List.of(vision.detections)
         ..sort((a, b) => b.confidence.compareTo(a.confidence));
       final top = sorted.take(5).toList();
@@ -386,24 +387,12 @@ class AwarenessController extends ChangeNotifier {
       final parts = <String>[];
       for (final d in top) {
         final cx = (d.left + d.right) / 2;
-        final String position;
-        if (cx < 0.33) {
-          position = 'on your left';
-        } else if (cx > 0.67) {
-          position = 'on your right';
-        } else {
-          position = 'ahead';
-        }
-        parts.add('${d.label} $position');
+        parts.add('${s.translateLabel(d.label)} ${s.direction(cx)}');
       }
 
-      if (parts.length == 1) {
-        return 'I can see ${parts.first}.';
-      }
-      final last = parts.removeLast();
-      return 'I can see ${parts.join(', ')}, and $last.';
+      return s.iCanSeeMultiple(parts);
     } catch (e) {
-      return 'Could not analyse the scene right now.';
+      return _strings.cannotAnalyse();
     }
   }
 

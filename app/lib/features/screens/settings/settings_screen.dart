@@ -117,7 +117,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       );
                     }).toList(),
                     onChanged: (String? v) {
-                      if (v != null) setState(() => settings.setSpeechLanguage(v));
+                      if (v != null) {
+                        setState(() => settings.setSpeechLanguage(v));
+                        if (_s.isFullyInitialized) {
+                          _s.tts.applySettings();
+                        }
+                      }
                     },
                   ),
                   const SizedBox(height: Space.md),

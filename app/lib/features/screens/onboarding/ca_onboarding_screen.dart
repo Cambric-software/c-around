@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/app_services.dart';
+import '../../../core/output/speech_strings.dart';
 import '../../../core/settings/settings_service.dart';
 import '../../widgets/ca_widgets.dart';
 
@@ -41,10 +42,8 @@ class _CaOnboardingScreenState extends State<CaOnboardingScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (!widget.services.isFullyInitialized) return;
-      widget.services.announcer.speakDirect(
-        'Welcome to C Around. The world, explained. This app works without '
-        'the internet.',
-      );
+      final s = SpeechStrings(widget.services.settings.speechLanguage);
+      widget.services.announcer.speakDirect(s.welcome());
     });
   }
 
@@ -71,9 +70,8 @@ class _CaOnboardingScreenState extends State<CaOnboardingScreen> {
     await widget.services.settings.setOnboardingComplete(true);
     if (!mounted) return;
     if (widget.services.isFullyInitialized) {
-      await widget.services.announcer.speakDirect(
-        'Setup is done. Everything can be changed in Settings.',
-      );
+      final s = SpeechStrings(widget.services.settings.speechLanguage);
+      await widget.services.announcer.speakDirect(s.setupDone());
     }
     widget.onComplete?.call();
   }
