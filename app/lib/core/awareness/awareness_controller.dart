@@ -245,7 +245,14 @@ class AwarenessController extends ChangeNotifier {
     _describing = true;
     notifyListeners();
     try {
-      final text = await moondream.describe(bytes);
+      // Try Moondream first (desktop). On Android it returns an error immediately.
+      String text;
+      try {
+        text = await moondream.describe(bytes);
+      } on Exception {
+        // Moondream unavailable — fall back to YOLO-based description.
+        text = await _yoloDescription(bytes);
+      }
       _lastFrame = bytes;
       await announcer.speakDirect(text);
       return text;
@@ -261,7 +268,13 @@ class AwarenessController extends ChangeNotifier {
     _reading = true;
     notifyListeners();
     try {
-      final text = await moondream.readText(bytes);
+      String text;
+      try {
+        text = await moondream.readText(bytes);
+      } on Exception {
+        // Moondream unavailable — run YOLO and report what was found.
+        text = await _yoloDescription(bytes);
+      }
       _lastFrame = bytes;
       await announcer.speakDirect(text);
       return text;
@@ -274,7 +287,12 @@ class AwarenessController extends ChangeNotifier {
   /// Ask Moondream a free-form question about a fresh frame.
   Future<String> ask(String question) async {
     final bytes = await _freshFrame();
-    final text = await moondream.ask(bytes, question);
+    String text;
+    try {
+      text = await moondream.ask(bytes, question);
+    } on Exception {
+      text = await _yoloDescription(bytes);
+    }
     _lastFrame = bytes;
     await announcer.speakDirect(text);
     return text;
@@ -282,7 +300,12 @@ class AwarenessController extends ChangeNotifier {
 
   /// Describe a photo the user picked from disk.
   Future<String> describeImage(Uint8List bytes) async {
-    final text = await moondream.describe(bytes);
+    String text;
+    try {
+      text = await moondream.describe(bytes);
+    } on Exception {
+      text = await _yoloDescription(bytes);
+    }
     _lastFrame = bytes;
     await announcer.speakDirect(text);
     return text;
@@ -290,7 +313,12 @@ class AwarenessController extends ChangeNotifier {
 
   /// Read text from a photo the user picked from disk.
   Future<String> readImage(Uint8List bytes) async {
-    final text = await moondream.readText(bytes);
+    String text;
+    try {
+      text = await moondream.readText(bytes);
+    } on Exception {
+      text = await _yoloDescription(bytes);
+    }
     _lastFrame = bytes;
     await announcer.speakDirect(text);
     return text;
@@ -298,7 +326,12 @@ class AwarenessController extends ChangeNotifier {
 
   /// Ask a question about a photo the user picked from disk.
   Future<String> askImage(Uint8List bytes, String question) async {
-    final text = await moondream.ask(bytes, question);
+    String text;
+    try {
+      text = await moondream.ask(bytes, question);
+    } on Exception {
+      text = await _yoloDescription(bytes);
+    }
     _lastFrame = bytes;
     await announcer.speakDirect(text);
     return text;
@@ -328,6 +361,50 @@ class AwarenessController extends ChangeNotifier {
     }
     notifyListeners();
     return vision;
+  }
+
+  /// YOLO-based scene description — used on Android when Moondream is not available.
+  ///
+  /// Runs the object detector on [bytes] and builds a natural spoken sentence
+  /// from what it finds, with positions derived from bounding-box centres.
+  Future<String> _yoloDescription(Uint8List bytes) async {
+    await detector.load();
+    if (!detector.isReady) {
+      return 'The camera sees something but the vision model is not loaded yet.';
+    }
+    try {
+      final vision = await detector.detect(bytes);
+      if (vision.detections.isEmpty) {
+        return 'Nothing specific detected in front of you right now.';
+      }
+
+      // Sort by confidence, take top 5.
+      final sorted = List.of(vision.detections)
+        ..sort((a, b) => b.confidence.compareTo(a.confidence));
+      final top = sorted.take(5).toList();
+
+      final parts = <String>[];
+      for (final d in top) {
+        final cx = (d.left + d.right) / 2;
+        final String position;
+        if (cx < 0.33) {
+          position = 'on your left';
+        } else if (cx > 0.67) {
+          position = 'on your right';
+        } else {
+          position = 'ahead';
+        }
+        parts.add('${d.label} $position');
+      }
+
+      if (parts.length == 1) {
+        return 'I can see ${parts.first}.';
+      }
+      final last = parts.removeLast();
+      return 'I can see ${parts.join(', ')}, and $last.';
+    } catch (e) {
+      return 'Could not analyse the scene right now.';
+    }
   }
 
   Future<Uint8List> _freshFrame() async {
