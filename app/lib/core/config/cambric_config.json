@@ -1,18 +1,18 @@
 {
   "product": {
-    "id": "cambric-app-product",
-    "name": "Cambric App Product",
-    "subtitle": "",
-    "description": "A Cambric application built on the app-template foundation.",
+    "id": "com.cambric.c_around",
+    "name": "C Around",
+    "subtitle": "The world, explained.",
+    "description": "An offline accessibility companion that describes objects, reads text, names people, monitors sounds and keeps your emergency information one tap away — no internet required.",
     "publisher": "Cambric Software",
     "version": "1.0.0",
     "templateVersion": "1.0.0",
-    "website": "",
-    "supportUrl": ""
+    "website": "https://cambric-software.github.io/c-around/",
+    "supportUrl": "https://github.com/Cambric-software/c-around/issues"
   },
   "release": {
     "provider": "github",
-    "repository": "",
+    "repository": "Cambric-software/c-around",
     "apiBase": "https://api.github.com"
   },
   "cache": {
@@ -41,7 +41,7 @@
   },
   "localization": {
     "defaultLanguage": "en",
-    "supportedLanguages": ["en", "ar"],
+    "supportedLanguages": ["en", "ar", "fr", "de"],
     "rtlLanguages": ["ar"]
   },
   "environment": "production",

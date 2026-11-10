@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>C Around — Offline Accessibility Companion</title>
+  <meta name="description" content="C Around explains the world around you — objects, people, sounds — all offline, on your device. Free download for Android, Windows and Linux.">
+  <meta name="color-scheme" content="dark light">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="C Around — Offline Accessibility Companion">
+  <meta property="og:description" content="Camera awareness, face recognition, live captions and emergency alerts — no internet required.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cambric-software.github.io/c-around/">
+  <meta property="og:image" content="https://cambric-software.github.io/c-around/icon-512.png">
+
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#platforms">Skip to downloads</a>
+
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="#top" aria-label="C Around home">
+        <span class="brand-mark" aria-hidden="true">
+          <img src="icon-512.png" alt="" width="32" height="32">
+        </span>
+        <span class="brand-name">C Around</span>
+      </a>
+      <nav class="nav" aria-label="Page sections">
+        <a href="#platforms">Download</a>
+        <a href="#features">Features</a>
+        <a href="#privacy">Privacy</a>
+        <a href="#verify">Verify</a>
+      </nav>
+      <a class="btn nav-cta" href="#platforms">Get the app</a>
+    </div>
+  </header>
+
+  <main id="top">
+
+    <!-- ── Hero ──────────────────────────────────────────────── -->
+    <section class="hero wrap">
+      <p class="eyebrow">Cambric Software &middot; Free &middot; Offline</p>
+      <h1>The world,<br>explained.</h1>
+      <p class="lede">
+        C Around is an offline accessibility companion that describes what is
+        in front of you, names the people you know, reads signs aloud,
+        monitors sounds, and keeps your emergency information one tap away —
+        without sending a single byte to the internet.
+      </p>
+      <div class="hero-actions">
+        <a class="btn primary large" href="https://github.com/Cambric-software/c-around/releases/latest/download/android.apk">
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.523 15.341A5.5 5.5 0 0 0 12 9.5a5.5 5.5 0 0 0-5.523 5.841L3 17l1.5 1 1.5-3.5A7.5 7.5 0 0 1 12 7.5a7.5 7.5 0 0 1 6 2.998L19.5 7 21 8l-3.477 7.341z"/><path d="M9.5 16.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm5 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>
+          Download for Android
+        </a>
+        <a class="btn" href="#platforms">All platforms</a>
+      </div>
+      <p class="version" id="version-line" hidden>
+        Latest release: <span id="version-value"></span>
+      </p>
+      <p class="fineprint">
+        Android 8.0+, arm64. Windows &amp; Linux also available below.
+        Links always point to the newest release.
+      </p>
+    </section>
+
+    <!-- ── Platforms ─────────────────────────────────────────── -->
+    <section class="wrap section" id="platforms">
+      <h2>Download</h2>
+      <p class="section-lede">
+        One app, three platforms. Every build is the same source, published
+        from the same release pipeline.
+      </p>
+
+      <div class="grid platforms">
+
+        <!-- Android — primary -->
+        <article class="card platform featured">
+          <div class="card-head">
+            <div class="platform-icon android" aria-hidden="true">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M17.523 15.341A5.5 5.5 0 0 0 12 9.5a5.5 5.5 0 0 0-5.523 5.841L3 17l1.5 1 1.5-3.5A7.5 7.5 0 0 1 12 7.5a7.5 7.5 0 0 1 6 2.998L19.5 7 21 8l-3.477 7.341z"/><path d="M9.5 16.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm5 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>
+            </div>
+            <div>
+              <h3>Android</h3>
+              <span class="chip recommended">Recommended</span>
+            </div>
+          </div>
+          <p class="body">
+            The full C Around experience. Camera awareness, face recognition,
+            sound monitoring, live captions, AAC talk screen, emergency card
+            and navigation — all running on-device with no internet.
+          </p>
+          <ul class="feature-list">
+            <li>Camera hazard detection (YOLO)</li>
+            <li>Sound classification (YAMNet)</li>
+            <li>Face recognition &amp; naming</li>
+            <li>Offline speech-to-text captions</li>
+            <li>Emergency medical card</li>
+            <li>AAC phrase bank</li>
+            <li>Full Arabic, French, German, English UI</li>
+          </ul>
+          <a class="btn primary block" href="https://github.com/Cambric-software/c-around/releases/latest/download/android.apk">
+            Download APK (arm64)
+          </a>
+          <p class="note">
+            Android 8.0 (API 26) or newer &middot; arm64-v8a &middot;
+            Allow &ldquo;Install from unknown sources&rdquo; in your phone&rsquo;s settings first.
+          </p>
+          <details class="sideload-guide">
+            <summary>How to sideload the APK</summary>
+            <ol>
+              <li>Download the APK to your Android device.</li>
+              <li>Open <strong>Settings &rarr; Apps &rarr; Special app access &rarr; Install unknown apps</strong>.</li>
+              <li>Allow your browser or file manager to install APKs.</li>
+              <li>Tap the downloaded file and follow the prompts.</li>
+            </ol>
+          </details>
+        </article>
+
+        <!-- Windows -->
+        <article class="card platform">
+          <div class="card-head">
+            <div class="platform-icon windows" aria-hidden="true">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h8.5v8.5H3zm9.5 0H21v8.5h-8.5zM3 12.5h8.5V21H3zm9.5 0H21V21h-8.5z"/></svg>
+            </div>
+            <div>
+              <h3>Windows</h3>
+              <span class="chip">x64</span>
+            </div>
+          </div>
+          <p class="body">
+            Includes all features except face recognition and YAMNet sound
+            classification (camera-based features work on desktop webcam).
+            The optional Moondream vision model runs locally via a bundled
+            llama-server.
+          </p>
+          <a class="btn primary block" href="https://github.com/Cambric-software/c-around/releases/latest/download/windows.zip">
+            Download ZIP
+          </a>
+          <p class="note">Windows 10 / 11, 64-bit. Extract and run <code>c_around.exe</code>.</p>
+        </article>
+
+        <!-- Linux -->
+        <article class="card platform">
+          <div class="card-head">
+            <div class="platform-icon linux" aria-hidden="true">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+            </div>
+            <div>
+              <h3>Linux</h3>
+              <span class="chip">x86_64</span>
+            </div>
+          </div>
+          <p class="body">
+            Same feature set as Windows. Install <code>speech-dispatcher</code>
+            for spoken output, or it will show text only.
+          </p>
+          <a class="btn primary block" href="https://github.com/Cambric-software/c-around/releases/latest/download/linux.tar.gz">
+            Download tar.gz
+          </a>
+          <p class="note">glibc 2.31+, 64-bit. Extract and run <code>c_around</code>.</p>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ── Features ──────────────────────────────────────────── -->
+    <section class="wrap section" id="features">
+      <h2>Everything works offline</h2>
+      <p class="section-lede">
+        No account. No subscription. No upload. All inference runs on your
+        device using bundled ONNX models.
+      </p>
+
+      <div class="grid features">
+        <article class="card feature">
+          <div class="feature-icon" aria-hidden="true">👁️</div>
+          <h3>Camera Awareness</h3>
+          <p class="body">
+            Continuous YOLO object detection speaks hazards aloud — cars,
+            stairs, people, bikes — with direction and confidence.
+          </p>
+        </article>
+
+        <article class="card feature">
+          <div class="feature-icon" aria-hidden="true">🔊</div>
+          <h3>Sound Monitor</h3>
+          <p class="body">
+            YAMNet classifies 521 audio classes and alerts you to sirens,
+            alarms, knocking, breaking glass and more — even in silent mode.
+          </p>
+        </article>
+
+        <article class="card feature">
+          <div class="feature-icon" aria-hidden="true">👤</div>
+          <h3>Face Recognition</h3>
+          <p class="body">
+            Enrol the people you know. C Around names them when they appear
+            in frame, with direction: &ldquo;Sara is on your left.&rdquo;
+          </p>
+        </article>
+
+        <article class="card feature">
+          <div class="feature-icon" aria-hidden="true">📝</div>
+          <h3>Live Captions</h3>
+          <p class="body">
+            Offline Whisper speech-to-text transcribes speech in real time,
+            with full history stored locally. Nothing is sent anywhere.
+          </p>
+        </article>
+
+        <article class="card feature">
+          <div class="feature-icon" aria-hidden="true">💬</div>
+          <h3>Talk &amp; AAC</h3>
+          <p class="body">
+            A phrase bank of quick-tap cards for non-verbal communication.
+            Tap a card to speak it, or type anything and send it to the voice.
+          </p>
+        </article>
+
+        <article class="card feature">
+          <div class="feature-icon" aria-hidden="true">🚨</div>
+          <h3>Emergency Card</h3>
+          <p class="body">
+            Your medical information and emergency contact shown full-screen
+            with one tap — no unlock required in an emergency.
+          </p>
+        </article>
+
+        <article class="card feature">
+          <div class="feature-icon" aria-hidden="true">🗺️</div>
+          <h3>Navigate</h3>
+          <p class="body">
+            Save locations and items. Find where you left your keys, or get
+            spoken walking directions to a saved place.
+          </p>
+        </article>
+
+        <article class="card feature">
+          <div class="feature-icon" aria-hidden="true">🌐</div>
+          <h3>Four Languages</h3>
+          <p class="body">
+            Full interface in English, Arabic (RTL), French and German.
+            Change language in Settings — no restart needed.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ── Privacy ────────────────────────────────────────────── -->
+    <section class="wrap section" id="privacy">
+      <h2>Privacy by design</h2>
+      <div class="grid privacy-grid">
+        <div class="privacy-item">
+          <span class="privacy-icon" aria-hidden="true">🔒</span>
+          <h3>No account, ever</h3>
+          <p>C Around has no login, no profile, no cloud sync. Your identity is yours.</p>
+        </div>
+        <div class="privacy-item">
+          <span class="privacy-icon" aria-hidden="true">📵</span>
+          <h3>No internet required</h3>
+          <p>All models run on-device. The only optional network call is checking for a newer version.</p>
+        </div>
+        <div class="privacy-item">
+          <span class="privacy-icon" aria-hidden="true">📷</span>
+          <h3>Camera stays local</h3>
+          <p>Frames are analysed in memory and discarded. Nothing is recorded or transmitted.</p>
+        </div>
+        <div class="privacy-item">
+          <span class="privacy-icon" aria-hidden="true">🎙️</span>
+          <h3>Audio stays local</h3>
+          <p>The microphone feeds only the on-device classifier and Whisper. No audio leaves the phone.</p>
+        </div>
+      </div>
+      <a class="btn" href="https://github.com/Cambric-software/c-around/blob/main/docs/PRIVACY.md">
+        Read the full privacy statement
+      </a>
+    </section>
+
+    <!-- ── Verify ─────────────────────────────────────────────── -->
+    <section class="wrap section" id="verify">
+      <h2>Verify your download</h2>
+      <div class="card">
+        <p class="body">
+          Every release publishes a <code>.sha256</code> companion file. Compare
+          the hash before you install — especially after sideloading on Android.
+        </p>
+        <pre class="code"><code># Android / Linux (on your computer)
+sha256sum android.apk
+
+# Windows
+Get-FileHash .\android.apk -Algorithm SHA256</code></pre>
+        <p class="body">
+          The expected hash is on the release page. The page above cannot show
+          the hash because it would go stale — always read it from the release
+          itself.
+        </p>
+        <a class="btn" href="https://github.com/Cambric-software/c-around/releases/latest">
+          Open release &amp; checksums
+        </a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <p class="footer-brand">
+        <img src="icon-512.png" alt="C Around" width="20" height="20">
+        C Around by <strong>Cambric Software</strong>
+      </p>
+      <p>&copy; <span id="year"></span> Cambric Software. All rights reserved.</p>
+      <nav aria-label="Legal and source">
+        <a href="https://github.com/Cambric-software/c-around/blob/main/LICENSE">Licence</a>
+        <a href="https://github.com/Cambric-software/c-around/blob/main/SECURITY.md">Security</a>
+        <a href="https://github.com/Cambric-software/c-around/blob/main/docs/PRIVACY.md">Privacy</a>
+        <a href="https://github.com/Cambric-software/c-around">Source</a>
+        <a href="https://github.com/Cambric-software/c-around/releases">All releases</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

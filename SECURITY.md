@@ -1,126 +1,119 @@
-# Security Policy
+# Security Policy — C Around
 
-Security policy and practices for Cambric applications built on this template.
+**Contact:** security@cambric.dev  
+**Response time:** within 48 hours for critical issues; fix target within 14 days.
+
+---
+
+## Reporting a vulnerability
+
+**Do NOT open a public GitHub issue for security vulnerabilities.**
+
+Send a report to **security@cambric.dev** with:
+
+1. A clear description of the vulnerability and its potential impact.
+2. Steps to reproduce or a minimal proof-of-concept.
+3. The affected version(s) and platform(s).
+4. Any suggested remediation (optional but appreciated).
+
+We will acknowledge receipt within 48 hours and aim to publish a fix within 14 days for critical issues. We will credit reporters in the release notes unless you request anonymity.
+
+---
+
+## Scope
+
+| Component | In scope |
+|---|---|
+| C Around Android / Windows / Linux app | ✅ |
+| On-device AI models (YOLO, YAMNet, Whisper, face recognizer) | ✅ |
+| Update verification and download pipeline | ✅ |
+| PIN-based app lock | ✅ |
+| SQLite local database | ✅ |
+| GitHub Actions CI/CD pipeline | ✅ |
+| Download page (GitHub Pages) | ✅ |
+| Third-party dependencies (Flutter, sherpa-onnx, onnxruntime, etc.) | ⚠️ report upstream; CC us |
 
 ---
 
 ## Security model
 
-Cambric applications are **local-first**. Security defaults are:
+C Around is **local-first**. The threat model prioritises:
 
-- No remote authentication required
-- No telemetry or usage tracking by default
-- No mandatory cloud backend
-- User data stays on the device unless explicitly shared by the user
+1. **Data confidentiality** — user data (faces, phrases, medical card, captions) must not leave the device without explicit user action.
+2. **Model integrity** — downloaded model packs are verified with SHA-256 before use.
+3. **Update integrity** — release artifacts include companion `.sha256` files; the app verifies them before installing.
+4. **PIN protection** — the app lock uses PBKDF2-SHA-256 (10,000 iterations) to hash the PIN; the hash is stored in SharedPreferences and never transmitted.
+5. **No remote attack surface** — there is no server, no API key and no authentication endpoint. The only outbound network request is a GET to `api.github.com/repos/Cambric-software/c-around/releases/latest`.
+
+---
+
+## What the app does NOT do
+
+- It does **not** upload camera frames, audio, faces or any other sensor data.
+- It does **not** have an account system, login or cloud sync.
+- It does **not** use third-party analytics or crash-reporting SDKs.
+- It does **not** store biometric data outside the device (face embeddings are float vectors in a local SQLite database).
+- Moondream (optional desktop-only vision model) runs as a **localhost-only** llama-server process; no request leaves the machine.
 
 ---
 
 ## Provided security infrastructure
 
-### Input sanitization
+### Input sanitisation
+`InputSanitizationService` — all user input is sanitised before storage or display:
+- `trimWhitespace`, `toSafeIdentifier`, `sanitizeFilename`
+- `escapeHtml`, `validateEmail`, `validateUrl`
+- `looksLikeSecret` — detects accidental secret values
 
-`InputSanitizationService` — sanitize and validate all user input before storing, rendering, or sending:
-
-- `trimWhitespace` — remove surrounding whitespace
-- `toSafeIdentifier` — normalize to safe alphanumeric identifier
-- `sanitizeFilename` — remove path traversal characters
-- `escapeHtml` — escape HTML special characters
-- `validateRequired`, `validateEmail`, `validateUrl`, `validateMinLength`
-- `looksLikeSecret` — detect accidental secret values in input
-
-### Atomic file writes
-
-`AtomicFileService` — all persistent writes use atomic write-then-rename:
-
-- Data is written to a temporary file first
-- The file is renamed (committed) only after a successful write
-- Prevents partial writes and file corruption on unexpected shutdown
-- Used by storage, cache, and backup subsystems
+### Atomic writes
+`AtomicFileService` — all persistent writes use write-to-temp then rename, preventing corruption on power loss.
 
 ### Secret redaction
-
-`SecretRedactionService` — redact sensitive values before logging or exporting:
-
-- Detects private keys, API keys, tokens, passwords, GitHub tokens, AWS keys
-- `redact(string)` — redact a single string
-- `redactMap(map)` — redact all sensitive keys in a map
+`SecretRedactionService` — redacts private keys, API tokens, passwords and GitHub tokens before logging or exporting diagnostic reports.
 
 ### Hashing and integrity
-
 `SecurityService`:
-
-- `sha256String`, `sha256Bytes`, `sha256File` — SHA-256 hashing
-- `constantTimeEquals` — timing-safe string comparison
+- `sha256String`, `sha256Bytes`, `sha256File`
+- `constantTimeEquals` — timing-safe comparison
 - `generateIntegrityTag` / `verifyIntegrityTag` — HMAC-SHA256
-- `verifyFileChecksum` — verify a file against an expected SHA-256 hash
+- `verifyFileChecksum` — file integrity check
 
-### Access control
-
-`AccessControlService` — software-level capability gating:
-
-- `grant(subject, capability)` — grant a capability
-- `revoke(subject, capability)` — revoke a capability
-- `can(subject, capability)` — check permission
+### App lock
+`AppLockService` — optional PIN lock:
+- 6-digit PIN hashed with PBKDF2-SHA-256 (10,000 iterations + random salt)
+- Lockout after 5 failed attempts (5-minute delay)
+- Hash stored in `SharedPreferences`; never transmitted
 
 ### Update verification
-
-`UpdateVerificationService` — verifies downloaded packages before installation:
-
-- File existence check
-- Non-empty file check
-- SHA-256 checksum comparison against the published release checksum
-
-All release artifacts (Windows `.zip`, Linux `.tar.gz`, Android `.apk`) are published with a companion `.sha256` file. Verification is performed before any install step executes.
+`UpdateVerificationService` — verifies every downloaded package before installation:
+- File exists and is non-empty
+- SHA-256 checksum matches the companion `.sha256` published with the release
+- Verification failure blocks installation
 
 ---
 
-## Dependency auditing in CI
+## Dependency auditing
 
-The `security.yml` GitHub Actions workflow runs on every push and pull request:
+The `security.yml` CI workflow runs on every push:
 
-- `dart pub audit` — checks all transitive dependencies for known vulnerabilities
-- Grep scan of `lib/` for hardcoded credential patterns (API keys, passwords, tokens)
-- Check that no `.env` files have been committed to the repository
-
-`dart pub audit` runs with `continue-on-error: true` because upstream packages may carry informational advisories that do not affect this application. Review audit output in CI and address genuine vulnerabilities.
+- `dart pub audit` — checks all transitive dependencies for known CVEs
+- Grep scan of `lib/` for hardcoded credential patterns
+- Check that no `.env` or secret files have been committed
 
 ---
 
-## Secret scanning in developer tools
+## Supported versions
 
-`scripts-doctor.ps1` scans Dart source files for common secret patterns:
-
-- AWS access key IDs (`AKIA...`)
-- GitHub personal access tokens (`ghp_...`)
-- Private key headers
-- Generic `api_key =`, `password =`, `token =` assignments
-
-Run before committing:
-
-```powershell
-.\scripts-doctor.ps1
-```
+| Version | Supported |
+|---|---|
+| Latest release | ✅ |
+| Previous release | ⚠️ best-effort |
+| Older releases | ❌ please upgrade |
 
 ---
 
-## What this template does NOT do
+## Legal notice
 
-- It does NOT implement OS keychain or secure enclave storage (requires platform plugins)
-- It does NOT implement OAuth or remote authentication flows
-- It does NOT send diagnostic data to remote servers
+Unauthorised security research that exploits vulnerabilities beyond read-only inspection, extracts user data from other users' devices, or violates applicable law is not authorised and will be prosecuted. Responsible disclosure under this policy is explicitly authorised.
 
----
-
-## Reporting vulnerabilities
-
-Do not report security vulnerabilities in public GitHub issues.
-
-Contact: **security@cambric.dev**
-
-Please include:
-
-1. A description of the vulnerability and its potential impact
-2. Steps to reproduce or a proof-of-concept
-3. The affected version(s)
-
-We will acknowledge receipt within 48 hours and aim to release a fix within 14 days for critical issues.
+© 2026 Cambric Software.

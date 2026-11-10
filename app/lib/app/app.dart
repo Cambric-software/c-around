@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../features/screens/onboarding/ca_onboarding_screen.dart';
 import 'app_services.dart';
@@ -88,6 +89,18 @@ class _CambricAppState extends State<CambricApp> {
       theme: CaTheme.light(),
       darkTheme: CaTheme.dark(),
       themeMode: _themeMode,
+      // Localizations — English (default), Arabic, French, German
+      localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const <Locale>[
+        Locale('en'),           // English — default
+        Locale('ar'),           // Arabic (RTL)
+        Locale('fr'),           // French
+        Locale('de'),           // German
+      ],
       home: _onboardingComplete
           ? AppShell(
               services: widget.services,
