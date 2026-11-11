@@ -159,9 +159,11 @@ class AppServices {
       diagnostics.reportError('Database open failed', error: error);
     }
 
-    // 6. Output services
+    // 6. Output services — initialize audio after runApp (platform channels ready)
     alerts = AlertService(settings);
+    await alerts.initialize();   // sets up AudioPlayer release mode
     tts = TtsService(settings);
+    await tts.initialize();      // loads the voice, sets rate/pitch/language
 
     // 7. Models root
     models = ModelManager(root: await storage.dataDirectory);

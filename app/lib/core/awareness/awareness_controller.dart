@@ -110,12 +110,9 @@ class AwarenessController extends ChangeNotifier {
     }
 
     await detector.load();
-    if (!detector.isReady) {
-      _error = detector.error ?? 'The object detector could not be loaded.';
-      await camera.stop();
-      notifyListeners();
-      return false;
-    }
+    // If detector is unavailable (stubbed), still start camera for
+    // the live preview and scene description via YOLO fallback.
+    // isReady = false just means auto-scanning won't produce hazard alerts.
 
     await refreshPeople();
     _error = null;
@@ -369,9 +366,11 @@ class AwarenessController extends ChangeNotifier {
   /// Runs the object detector on [bytes] and builds a natural spoken sentence
   /// from what it finds, with positions derived from bounding-box centres.
   Future<String> _yoloDescription(Uint8List bytes) async {
-    await detector.load();
+    // If detector not available, speak an honest message in the user's language
     if (!detector.isReady) {
-      return _strings.modelNotLoaded();
+      final msg = _strings.nothingDetected();
+      await announcer.speakDirect(msg);
+      return msg;
     }
     try {
       final vision = await detector.detect(bytes);

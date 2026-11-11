@@ -121,6 +121,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         setState(() => settings.setSpeechLanguage(v));
                         if (_s.isFullyInitialized) {
                           _s.tts.applySettings();
+                          // Re-initialize TTS with the new language
+                          _s.tts.initialize();
                         }
                       }
                     },

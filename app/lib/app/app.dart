@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../features/screens/onboarding/ca_onboarding_screen.dart';
+import '../l10n/app_localizations.dart';
 import 'app_services.dart';
 import 'app_shell.dart';
 import 'ca_theme.dart';
@@ -97,6 +98,7 @@ class _CambricAppState extends State<CambricApp> {
       locale:     _locale,
       supportedLocales: _supported,
       localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
