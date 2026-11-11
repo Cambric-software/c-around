@@ -27,6 +27,17 @@ class _AroundScreenState extends State<AroundScreen> {
 
   AppServices get _services => widget.services;
 
+  @override
+  void initState() {
+    super.initState();
+    // Start awareness after the first frame so platform channels are ready.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_services.awareness.isRunning) {
+        _services.awareness.start();
+      }
+    });
+  }
+
   Future<void> _describe() => _run(
         'Scene description',
         _services.awareness.describeScene,

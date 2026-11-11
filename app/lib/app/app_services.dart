@@ -202,22 +202,12 @@ class AppServices {
     featureFlags = const FeatureFlagService({});
     appLock = AppLockService(await preferences.preferences);
 
-    // 15. Start services — ALL wrapped in try/catch so a failed permission
-    //     never crashes the app. The user can enable them from the Around screen.
-    try {
-      await awareness.start();
-    } catch (error) {
-      diagnostics.reportError('Awareness start failed', error: error);
-    }
-
-    // Captions: only start if Whisper model is installed (almost never on first launch)
-    if (captions.isInstalled) {
-      try {
-        await captions.start();
-      } catch (error) {
-        diagnostics.reportError('Captions start failed', error: error);
-      }
-    }
+    // 15. All hardware services are started ON DEMAND from the screens,
+    //     not here. Starting camera/microphone before runApp() causes crashes
+    //     on Android because platform channels are not fully ready.
+    //     The Around screen starts awareness when the user opens it.
+    //     The Sound Monitor starts when the user enables it.
+    //     This means the app always opens successfully, even without permissions.
   }
 
   Future<void> dispose() async {
