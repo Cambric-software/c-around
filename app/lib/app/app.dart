@@ -6,14 +6,12 @@ import 'app_services.dart';
 import 'app_shell.dart';
 import 'ca_theme.dart';
 
-/// Shared preference keys used across the app.
 abstract class AppPreferenceKeys {
-  static const String themeMode    = 'theme_mode';
+  static const String themeMode  = 'theme_mode';
   static const String onboardingComplete = 'onboarding_complete';
-  static const String language     = 'app_language';
+  static const String language   = 'app_language';
 }
 
-/// Parse a stored theme name back to a [ThemeMode].
 ThemeMode themeModeFromName(String? name) {
   switch (name) {
     case 'light':  return ThemeMode.light;
@@ -22,7 +20,6 @@ ThemeMode themeModeFromName(String? name) {
   }
 }
 
-/// Root widget — owns theme, locale and onboarding state.
 class CambricApp extends StatefulWidget {
   const CambricApp({
     super.key,
@@ -44,13 +41,11 @@ class CambricApp extends StatefulWidget {
 class _CambricAppState extends State<CambricApp> {
   late ThemeMode _themeMode;
   late bool      _onboardingComplete;
-  Locale?        _locale;   // null = use device locale
+  Locale?        _locale;
+  bool           _ready = false;   // true once initialize() finishes
 
   static const List<Locale> _supported = <Locale>[
-    Locale('en'),
-    Locale('ar'),
-    Locale('fr'),
-    Locale('de'),
+    Locale('en'), Locale('ar'), Locale('fr'), Locale('de'),
   ];
 
   @override
@@ -59,6 +54,19 @@ class _CambricAppState extends State<CambricApp> {
     _themeMode          = widget.initialThemeMode;
     _onboardingComplete = widget.initialOnboardingComplete;
     _locale             = widget.initialLocale;
+
+    if (widget.services.isFullyInitialized) {
+      _ready = true;
+    } else {
+      // Listen to the notifier — no polling, no pending timers.
+      void onReady() {
+        if (widget.services.isFullyInitialized && mounted) {
+          setState(() => _ready = true);
+          widget.services.initializedNotifier.removeListener(onReady);
+        }
+      }
+      widget.services.initializedNotifier.addListener(onReady);
+    }
   }
 
   Future<void> _onThemeModeChanged(ThemeMode mode) async {
@@ -93,18 +101,83 @@ class _CambricAppState extends State<CambricApp> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: _onboardingComplete
-          ? AppShell(
-              services:            widget.services,
-              themeMode:           _themeMode,
-              onThemeModeChanged:  _onThemeModeChanged,
-              onReplayOnboarding:  _onReplayOnboarding,
-              onLocaleChanged:     _onLocaleChanged,
-            )
-          : CaOnboardingScreen(
-              services:   widget.services,
-              onComplete: _onOnboardingComplete,
+      home: _buildHome(),
+    );
+  }
+
+  Widget _buildHome() {
+    // Show a branded splash screen while services are starting.
+    if (!_ready) {
+      return const _SplashScreen();
+    }
+
+    if (_onboardingComplete) {
+      return AppShell(
+        services:           widget.services,
+        themeMode:          _themeMode,
+        onThemeModeChanged: _onThemeModeChanged,
+        onReplayOnboarding: _onReplayOnboarding,
+        onLocaleChanged:    _onLocaleChanged,
+      );
+    }
+
+    return CaOnboardingScreen(
+      services:   widget.services,
+      onComplete: _onOnboardingComplete,
+    );
+  }
+}
+
+/// Shown while AppServices.initialize() runs after runApp().
+class _SplashScreen extends StatelessWidget {
+  const _SplashScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      backgroundColor: theme.colorScheme.surface,
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Container(
+              width: 96,
+              height: 96,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Icon(
+                Icons.visibility_rounded,
+                size: 52,
+                color: theme.colorScheme.onPrimary,
+              ),
             ),
+            const SizedBox(height: 28),
+            Text(
+              'C Around',
+              style: theme.textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'The world, explained.',
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 40),
+            const SizedBox(
+              width: 28,
+              height: 28,
+              child: CircularProgressIndicator(strokeWidth: 2.5),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

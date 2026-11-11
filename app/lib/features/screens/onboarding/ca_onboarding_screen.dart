@@ -38,7 +38,10 @@ class _CaOnboardingScreenState extends State<CaOnboardingScreen> {
   @override
   void initState() {
     super.initState();
-    _needs.addAll(widget.services.settings.needs);
+    // Only access settings if services are fully initialized.
+    if (widget.services.isFullyInitialized) {
+      _needs.addAll(widget.services.settings.needs);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (!widget.services.isFullyInitialized) return;
@@ -66,8 +69,11 @@ class _CaOnboardingScreenState extends State<CaOnboardingScreen> {
 
   Future<void> _finish() async {
     setState(() => _saving = true);
-    await widget.services.settings.setNeeds(_needs);
-    await widget.services.settings.setOnboardingComplete(true);
+    // Guard — services may still be initializing.
+    if (widget.services.isFullyInitialized) {
+      await widget.services.settings.setNeeds(_needs);
+      await widget.services.settings.setOnboardingComplete(true);
+    }
     if (!mounted) return;
     if (widget.services.isFullyInitialized) {
       final s = SpeechStrings(widget.services.settings.speechLanguage);

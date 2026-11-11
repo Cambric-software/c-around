@@ -10,7 +10,8 @@ import 'package:record/record.dart';
 /// broadcasts 16 kHz mono PCM chunks, and closes it when the last consumer
 /// releases it.
 class MicrophoneSource extends ChangeNotifier {
-  final AudioRecorder _recorder = AudioRecorder();
+  AudioRecorder? _recorderInstance;
+  AudioRecorder get _recorder => _recorderInstance ??= AudioRecorder();
   final StreamController<Uint8List> _controller =
       StreamController<Uint8List>.broadcast();
 

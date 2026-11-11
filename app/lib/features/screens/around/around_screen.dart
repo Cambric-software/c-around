@@ -30,10 +30,16 @@ class _AroundScreenState extends State<AroundScreen> {
   @override
   void initState() {
     super.initState();
-    // Start awareness after the first frame so platform channels are ready.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !_services.awareness.isRunning) {
-        _services.awareness.start();
+      if (!mounted) return;
+      // Only start if awareness service is actually initialized.
+      try {
+        if (!_services.isFullyInitialized) return;
+        if (!_services.awareness.isRunning) {
+          _services.awareness.start();
+        }
+      } catch (_) {
+        // awareness not set yet — ignore, user can toggle manually
       }
     });
   }
@@ -180,6 +186,12 @@ class _AroundScreenState extends State<AroundScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Guard: if services not ready, show loading screen.
+    if (!_services.isFullyInitialized) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     return AnimatedBuilder(
       animation: Listenable.merge(<Listenable?>[
         _services.awareness,

@@ -14,7 +14,8 @@ class TtsService {
   TtsService(this._settings);
 
   final SettingsService _settings;
-  final FlutterTts _tts = FlutterTts();
+  FlutterTts? _ttsInstance;
+  FlutterTts get _tts => _ttsInstance ??= FlutterTts();
 
   bool _ready = false;
   bool _linuxFallback = false;

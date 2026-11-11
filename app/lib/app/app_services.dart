@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../core/cache/cache_cleanup_service.dart';
 import '../core/config/cambric_config.dart';
 import '../core/data/ca_database.dart';
@@ -65,12 +67,22 @@ class AppServices {
     return svc;
   }
 
+  /// For widget tests only — marks the service graph as ready without
+  /// starting any platform services.
+  void markReadyForTest() {
+    _announcerReady = true;
+  }
+
   // ── State ─────────────────────────────────────────────────────────────────
 
   SettingsService? _settings;
   bool _announcerReady = false;
+  final ValueNotifier<bool> _initializedNotifier = ValueNotifier<bool>(false);
 
   bool get isFullyInitialized => _settings != null && _announcerReady;
+
+  /// Notifier that fires when [initialize] completes. Widgets can listen to this.
+  ValueNotifier<bool> get initializedNotifier => _initializedNotifier;
 
   SettingsService get settings {
     final s = _settings;
@@ -202,12 +214,8 @@ class AppServices {
     featureFlags = const FeatureFlagService({});
     appLock = AppLockService(await preferences.preferences);
 
-    // 15. All hardware services are started ON DEMAND from the screens,
-    //     not here. Starting camera/microphone before runApp() causes crashes
-    //     on Android because platform channels are not fully ready.
-    //     The Around screen starts awareness when the user opens it.
-    //     The Sound Monitor starts when the user enables it.
-    //     This means the app always opens successfully, even without permissions.
+    // All hardware services are started ON DEMAND from the screens.
+    _initializedNotifier.value = true;
   }
 
   Future<void> dispose() async {

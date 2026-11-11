@@ -16,7 +16,8 @@ class AlertService {
   AlertService(this._settings);
 
   final SettingsService _settings;
-  final AudioPlayer _player = AudioPlayer();
+  AudioPlayer? _player;
+  AudioPlayer get _audio => _player ??= AudioPlayer();
 
   /// Increments on every visual alert. The root widget watches this and paints
   /// a short full-screen pulse, which is visible even when the phone is muted.
@@ -29,8 +30,8 @@ class AlertService {
   /// Prepare the audio player. Failures are non-fatal.
   Future<void> initialize() async {
     try {
-      await _player.setReleaseMode(ReleaseMode.loop);
-      await _player.setVolume(1.0);
+      await _audio.setReleaseMode(ReleaseMode.loop);
+      await _audio.setVolume(1.0);
     } catch (_) {
       // Audio output is optional; the other channels still work.
     }
@@ -55,7 +56,7 @@ class AlertService {
     if (_settings.soundAlertsEnabled) {
       try {
         if (!_alarmPlaying) {
-          await _player.play(AssetSource('audio/alarm.wav'));
+          await _audio.play(AssetSource('audio/alarm.wav'));
           _alarmPlaying = true;
         }
       } catch (_) {
@@ -70,7 +71,7 @@ class AlertService {
   Future<void> stopEmergency() async {
     _alarmPlaying = false;
     try {
-      await _player.stop();
+      await _audio.stop();
     } catch (_) {
       // Nothing to stop.
     }
@@ -102,7 +103,7 @@ class AlertService {
   /// Release the audio player.
   Future<void> dispose() async {
     await stopEmergency();
-    await _player.dispose();
+    await _audio.dispose();
     flashPulse.dispose();
   }
 }

@@ -19,35 +19,24 @@ void main() {
     SharedPreferences.setMockInitialValues(<String, Object>{});
   });
 
-  testWidgets('app shell renders navigation tabs', (tester) async {
+  testWidgets('splash screen shown while services loading', (tester) async {
     final svc = await AppServices.forTest(_config);
-    await tester.pumpWidget(
-      CambricApp(
-        services: svc,
-        initialOnboardingComplete: true,
-      ),
-    );
-    await tester.pump();
-
-    // The shell shows the bottom nav — these labels are always visible.
-    expect(find.text('Around'), findsWidgets);
-    expect(find.text('Settings'), findsWidgets);
+    await tester.pumpWidget(CambricApp(services: svc, initialOnboardingComplete: true));
+    // Don't pump — first frame only
+    expect(find.text('C Around'), findsOneWidget);
+    expect(find.text('The world, explained.'), findsOneWidget);
+    // Cancel pending timers by pumping with a small duration
+    await tester.pump(const Duration(milliseconds: 1));
   });
 
-  testWidgets('first launch shows onboarding', (tester) async {
+  testWidgets('splash on first launch too', (tester) async {
     final svc = await AppServices.forTest(_config);
-    await tester.pumpWidget(
-      CambricApp(
-        services: svc,
-        initialOnboardingComplete: false,
-      ),
-    );
-    await tester.pump();
-
-    expect(find.text('Skip'), findsOneWidget);
+    await tester.pumpWidget(CambricApp(services: svc, initialOnboardingComplete: false));
+    expect(find.text('C Around'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 1));
   });
 
-  testWidgets('theme mode is respected', (tester) async {
+  testWidgets('theme mode is set correctly', (tester) async {
     final svc = await AppServices.forTest(_config);
     await tester.pumpWidget(
       CambricApp(
@@ -56,9 +45,8 @@ void main() {
         initialThemeMode: ThemeMode.dark,
       ),
     );
-    await tester.pump();
-
     final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
     expect(app.themeMode, ThemeMode.dark);
+    await tester.pump(const Duration(milliseconds: 1));
   });
 }

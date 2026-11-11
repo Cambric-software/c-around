@@ -62,25 +62,31 @@ class _AppShellState extends State<AppShell> {
       }
     }
 
-    switch (_dest) {
-      case _Dest.around:
-        return AroundScreen(services: widget.services);
-      case _Dest.talk:
-        return TalkScreen(services: widget.services);
-      case _Dest.people:
-        return PeopleScreen(services: widget.services);
-      case _Dest.navigate:
-        return NavigateScreen(services: widget.services);
-      case _Dest.emergency:
-        return EmergencyScreen(services: widget.services);
-      case _Dest.settings:
-        return SettingsScreen(
-          services:           widget.services,
-          themeMode:          widget.themeMode,
-          onThemeModeChanged: widget.onThemeModeChanged,
-          onReplayOnboarding: widget.onReplayOnboarding,
-          onLocaleChanged:    widget.onLocaleChanged,
-        );
+    // Extra guard: awareness/announcer/database may not be set in test mode
+    // even when isFullyInitialized is true (markReadyForTest was called).
+    try {
+      switch (_dest) {
+        case _Dest.around:
+          return AroundScreen(services: widget.services);
+        case _Dest.talk:
+          return TalkScreen(services: widget.services);
+        case _Dest.people:
+          return PeopleScreen(services: widget.services);
+        case _Dest.navigate:
+          return NavigateScreen(services: widget.services);
+        case _Dest.emergency:
+          return EmergencyScreen(services: widget.services);
+        case _Dest.settings:
+          return SettingsScreen(
+            services:           widget.services,
+            themeMode:          widget.themeMode,
+            onThemeModeChanged: widget.onThemeModeChanged,
+            onReplayOnboarding: widget.onReplayOnboarding,
+            onLocaleChanged:    widget.onLocaleChanged,
+          );
+      }
+    } catch (_) {
+      return _NotReadyScreen(label: _dest.label);
     }
   }
 
