@@ -113,7 +113,7 @@ class AppServices {
   // ── Initialization ────────────────────────────────────────────────────────
 
   Future<void> initialize() async {
-    // 1. Settings — everything else depends on this
+    // Settings — load from SharedPreferences (already safe after runApp)
     _settings = SettingsService(await preferences.preferences);
     await _settings!.load();
 

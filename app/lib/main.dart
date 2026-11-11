@@ -9,36 +9,33 @@ const String kConfigAsset = 'lib/core/config/cambric_config.json';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final config   = await CambricConfig.loadBundled(kConfigAsset);
+  // Load config — no platform channels involved, safe before runApp.
+  final config = await CambricConfig.loadBundled(kConfigAsset);
+
+  // Create the service graph — constructors only, no platform channels yet.
   final services = AppServices(config: config);
-  await services.initialize();
 
-  FlutterError.onError = (FlutterErrorDetails details) {
-    FlutterError.presentError(details);
-    if (services.isFullyInitialized) {
-      services.diagnostics.reportError(
-        'Unhandled Flutter error',
-        error: details.exception,
-        stackTrace: details.stack,
-      );
-    }
-  };
+  // Read stored preferences — SharedPreferences is safe before runApp.
+  final prefs = services.preferences;
+  final themeName = await prefs.getString(AppPreferenceKeys.themeMode);
+  final onboardingDone = await prefs.getBool(AppPreferenceKeys.onboardingComplete) ?? false;
+  final langCode = await prefs.getString(AppPreferenceKeys.language);
 
-  final themeName = await services.preferences.getString(AppPreferenceKeys.themeMode);
-  final onboardingComplete = await services.preferences.getBool(AppPreferenceKeys.onboardingComplete);
-  final langCode = await services.preferences.getString(AppPreferenceKeys.language);
+  final initialLocale = (langCode != null && langCode.isNotEmpty)
+      ? Locale(langCode)
+      : null;
 
-  Locale? initialLocale;
-  if (langCode != null && langCode.isNotEmpty) {
-    initialLocale = Locale(langCode);
-  }
-
+  // Run the app FIRST — platform channels are ready after this.
   runApp(
     CambricApp(
-      services:               services,
-      initialThemeMode:       themeModeFromName(themeName),
-      initialOnboardingComplete: onboardingComplete ?? false,
-      initialLocale:          initialLocale,
+      services: services,
+      initialThemeMode: themeModeFromName(themeName),
+      initialOnboardingComplete: onboardingDone,
+      initialLocale: initialLocale,
     ),
   );
+
+  // NOW initialize all platform-channel services, after runApp.
+  // Any crash here shows as a diagnostics error, not an app crash.
+  await services.initialize();
 }
