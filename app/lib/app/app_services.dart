@@ -29,11 +29,6 @@ import '../core/awareness/sound_monitor.dart';
 import '../core/ai/speech_recognizer.dart';
 import '../core/vision/camera_frame_source.dart';
 
-/// The services this template actually wires at startup.
-///
-/// Everything here is constructed once in `main()` and passed down explicitly.
-/// There is no global service locator: a screen receives the object it needs,
-/// which keeps tests able to substitute a fake.
 class AppServices {
   AppServices({
     required this.config,
@@ -53,154 +48,117 @@ class AppServices {
               config: config,
               security: const SecurityService(),
             ),
-        version = VersionService.fromString(config.version);
+        version = VersionService.fromString(config.version),
+        // diagnostics is created immediately — never late
+        diagnostics = DiagnosticsService(
+          config: config,
+          version: VersionService.fromString(config.version),
+        );
 
-  /// Creates a minimal service graph for widget tests.
-  ///
-  /// Platform services (camera, microphone, database) are not started.
-  /// Settings, TTS, alerts, announcer and database stubs are wired so
-  /// screens render without hardware access.
+  // ── Test factory ──────────────────────────────────────────────────────────
+
   static Future<AppServices> forTest(CambricConfig config) async {
     final svc = AppServices(config: config);
     final prefs = await svc.preferences.preferences;
     svc._settings = SettingsService(prefs);
     await svc._settings!.load();
-    svc.diagnostics = DiagnosticsService(config: config, version: svc.version);
-    // NOTE: database, TTS, alerts, camera, microphone are NOT initialised in
-    // tests because their platform channels hang in the headless VM test runner.
-    // Screens guard platform-service access with `services.isFullyInitialized`.
     return svc;
   }
+
+  // ── State ─────────────────────────────────────────────────────────────────
 
   SettingsService? _settings;
   bool _announcerReady = false;
 
-  /// True once [initialize] has finished; false after [forTest].
   bool get isFullyInitialized => _settings != null && _announcerReady;
 
   SettingsService get settings {
-    if (_settings == null) {
-      throw StateError(
-        'AppServices.initialize() must be called before accessing settings. '
-        'In tests, call await services.initialize() in setUp.',
-      );
-    }
-    return _settings!;
+    final s = _settings;
+    if (s == null) throw StateError('call initialize() before accessing settings');
+    return s;
   }
 
-  /// Product identity and feature flags.
+  // ── Core services (always available) ─────────────────────────────────────
+
   final CambricConfig config;
-
-  /// Authoritative version, parsed once from config.
   final VersionService version;
-
-  /// Small persisted preferences: theme mode, onboarding completion.
   final PreferencesService preferences;
-
-  /// Persistent user data, scoped to this product.
   final LocalStorage storage;
-
-  /// Cache inspection and cleanup.
   final CacheCleanupService cacheCleanup;
-
-  /// Network reachability, used by the diagnostics screen.
   final ConnectivityService connectivity;
-
-  /// Release discovery, download and verification.
   final UpdateService updates;
-
-  /// Subscription state and license validation.
   final SubscriptionService subscription;
+  final DiagnosticsService diagnostics;   // ← eager, not late
 
-  /// Local diagnostic report builder.
-  late final DiagnosticsService diagnostics;
+  // ── C Around services (set in initialize()) ───────────────────────────────
 
-  // C Around specific services
-  /// Database for people, phrases, places, items.
   late final CaDatabase database;
-
-  /// Vibration and sound alerts.
   late final AlertService alerts;
-
-  /// Text-to-speech output.
   late final TtsService tts;
-
-  /// Central coordination of speech, haptics, and event history.
   late final Announcer announcer;
-
-  /// Camera frame capture and preview.
   late final CameraFrameSource camera;
-
-  /// Object detection with YOLO.
   late final YoloDetector detector;
-
-  /// Face detection and recognition.
   late final FaceRecognizer faces;
-
-  /// Audio analysis and sound classification.
   late final SoundMonitor soundMonitor;
-
-  /// Captions display.
   late final CaptionController captions;
-
-  /// Continuous camera awareness controller.
   late final AwarenessController awareness;
-
-  /// Model pack management and download.
   late final ModelManager models;
-
-  /// Feature flag management.
   late final FeatureFlagService featureFlags;
-
-  /// App lock with PIN protection.
   late final AppLockService appLock;
-
-  /// Off-screen whisper speech-to-text.
   late final SpeechRecognizer recognizer;
-
-  /// Shared microphone.
   late final MicrophoneSource microphone;
 
   final AppLifecycleService _lifecycle = AppLifecycleService();
 
-  /// Prepares logging, lifecycle tracking and the product data directory.
-  ///
-  /// Safe to call once from `main()`. Errors are reported to diagnostics rather
-  /// than preventing the app from starting.
+  // ── Initialization ────────────────────────────────────────────────────────
+
   Future<void> initialize() async {
-    // Initialize settings first since other services depend on it
+    // 1. Settings — everything else depends on this
     _settings = SettingsService(await preferences.preferences);
     await _settings!.load();
 
     CambricLogger.initialize();
-    await _lifecycle.initialize();
 
+    // 2. Lifecycle
+    try {
+      await _lifecycle.initialize();
+    } catch (_) {}
+
+    // 3. Storage
     try {
       await storage.dataDirectory;
     } catch (error) {
       diagnostics.setStorageHealthy(false);
-      diagnostics.reportError('Could not create the data directory', error: error);
+      diagnostics.reportError('Storage unavailable', error: error);
     }
 
+    // 4. Subscription
     try {
       await subscription.load();
     } catch (error) {
-      diagnostics.reportError('Could not load subscription state', error: error);
+      diagnostics.reportError('Subscription load failed', error: error);
     }
 
+    // 5. Database
+    database = CaDatabase.instance;
     try {
       await database.open();
     } catch (error) {
-      diagnostics.reportError('Could not open database', error: error);
+      diagnostics.reportError('Database open failed', error: error);
     }
 
-    // Initialize shared services in dependency order
+    // 6. Output services
     alerts = AlertService(settings);
     tts = TtsService(settings);
-    final dataDir = await storage.dataDirectory;
-    models = ModelManager(root: dataDir);
+
+    // 7. Models root
+    models = ModelManager(root: await storage.dataDirectory);
+
+    // 8. Microphone + speech recognizer
     recognizer = SpeechRecognizer(models);
     microphone = MicrophoneSource();
+
+    // 9. Announcer
     announcer = Announcer(
       settings: settings,
       tts: tts,
@@ -208,14 +166,20 @@ class AppServices {
       database: database,
     );
     _announcerReady = true;
+
+    // 10. Camera + detectors
+    camera = CameraFrameSource();
+    detector = YoloDetector();
+    faces = FaceRecognizer();
+
+    // 11. Captions (Whisper — will gracefully say "not installed" if pack missing)
     captions = CaptionController(
       recognizer: recognizer,
       microphone: microphone,
       database: database,
     );
-    camera = CameraFrameSource();
-    detector = YoloDetector();
-    faces = FaceRecognizer();
+
+    // 12. Awareness controller
     awareness = AwarenessController(
       settings: settings,
       camera: camera,
@@ -225,38 +189,43 @@ class AppServices {
       announcer: announcer,
       database: database,
     );
-    final prefs = await preferences.preferences;
+
+    // 13. Sound monitor
     soundMonitor = SoundMonitor(
       classifier: YamnetClassifier(),
       announcer: announcer,
       microphone: microphone,
       settings: settings,
     );
+
+    // 14. Misc
     featureFlags = const FeatureFlagService({});
-    appLock = AppLockService(prefs);
-    diagnostics = DiagnosticsService(
-      config: config,
-      version: version,
-    );
+    appLock = AppLockService(await preferences.preferences);
 
-    try {
-      await captions.start();
-    } catch (error) {
-      diagnostics.reportError('Could not start captions', error: error);
-    }
-
+    // 15. Start services — ALL wrapped in try/catch so a failed permission
+    //     never crashes the app. The user can enable them from the Around screen.
     try {
       await awareness.start();
     } catch (error) {
-      diagnostics.reportError('Could not start awareness controller', error: error);
+      diagnostics.reportError('Awareness start failed', error: error);
+    }
+
+    // Captions: only start if Whisper model is installed (almost never on first launch)
+    if (captions.isInstalled) {
+      try {
+        await captions.start();
+      } catch (error) {
+        diagnostics.reportError('Captions start failed', error: error);
+      }
     }
   }
 
-  /// Stops lifecycle observation. Used by integration tests and hot restart.
   Future<void> dispose() async {
-    await captions.stop();
-    await awareness.stop();
-    await database.close();
-    _lifecycle.dispose();
+    if (_announcerReady) {
+      try { await captions.stop(); } catch (_) {}
+      try { await awareness.stop(); } catch (_) {}
+    }
+    try { await database.close(); } catch (_) {}
+    try { _lifecycle.dispose(); } catch (_) {}
   }
 }
