@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.cambric.c_around"
+    namespace = "com.cambric.cambric_app"
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
@@ -14,7 +14,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.cambric.c_around"
+        applicationId = "com.cambric.cambric_app"
         minSdk = 26
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -22,13 +22,11 @@ android {
     }
 
     packagingOptions {
-        // onnxruntime and sherpa_onnx both ship libc++_shared.so — pick first to resolve conflict
+        // Keep first copy of any duplicated native libs
         pickFirst("lib/arm64-v8a/libc++_shared.so")
         pickFirst("lib/armeabi-v7a/libc++_shared.so")
         pickFirst("lib/x86/libc++_shared.so")
         pickFirst("lib/x86_64/libc++_shared.so")
-        pickFirst("lib/arm64-v8a/libonnxruntime.so")
-        pickFirst("lib/armeabi-v7a/libonnxruntime.so")
     }
 
     buildTypes {

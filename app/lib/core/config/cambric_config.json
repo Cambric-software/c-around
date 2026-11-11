@@ -5,7 +5,7 @@
     "subtitle": "The world, explained.",
     "description": "An offline accessibility companion that describes objects, reads text, names people, monitors sounds and keeps your emergency information one tap away — no internet required.",
     "publisher": "Cambric Software",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "templateVersion": "1.0.0",
     "website": "https://cambric-software.github.io/c-around/",
     "supportUrl": "https://github.com/Cambric-software/c-around/issues"
