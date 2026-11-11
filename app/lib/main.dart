@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'app/app.dart';
@@ -7,35 +9,104 @@ import 'core/config/cambric_config.dart';
 const String kConfigAsset = 'lib/core/config/cambric_config.json';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  // Catch ALL errors — never let the app crash silently.
+  runZonedGuarded(
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
 
-  // Load config — no platform channels involved, safe before runApp.
-  final config = await CambricConfig.loadBundled(kConfigAsset);
+      // Show the app immediately with a loading screen.
+      // This is the first thing that runs — no platform channels yet.
+      late final AppServices services;
+      late final ThemeMode initialThemeMode;
+      late final bool initialOnboardingComplete;
+      late final Locale? initialLocale;
 
-  // Create the service graph — constructors only, no platform channels yet.
-  final services = AppServices(config: config);
+      try {
+        final config = await CambricConfig.loadBundled(kConfigAsset);
+        services = AppServices(config: config);
 
-  // Read stored preferences — SharedPreferences is safe before runApp.
-  final prefs = services.preferences;
-  final themeName = await prefs.getString(AppPreferenceKeys.themeMode);
-  final onboardingDone = await prefs.getBool(AppPreferenceKeys.onboardingComplete) ?? false;
-  final langCode = await prefs.getString(AppPreferenceKeys.language);
+        final prefs = services.preferences;
+        final themeName = await prefs.getString(AppPreferenceKeys.themeMode);
+        final onboardingDone =
+            await prefs.getBool(AppPreferenceKeys.onboardingComplete) ?? false;
+        final langCode = await prefs.getString(AppPreferenceKeys.language);
 
-  final initialLocale = (langCode != null && langCode.isNotEmpty)
-      ? Locale(langCode)
-      : null;
+        initialThemeMode = themeModeFromName(themeName);
+        initialOnboardingComplete = onboardingDone;
+        initialLocale = (langCode != null && langCode.isNotEmpty)
+            ? Locale(langCode)
+            : null;
+      } catch (e, st) {
+        // Config or prefs failed — show a bare error screen.
+        runApp(_ErrorApp(message: e.toString()));
+        debugPrint('STARTUP ERROR: $e\n$st');
+        return;
+      }
 
-  // Run the app FIRST — platform channels are ready after this.
-  runApp(
-    CambricApp(
-      services: services,
-      initialThemeMode: themeModeFromName(themeName),
-      initialOnboardingComplete: onboardingDone,
-      initialLocale: initialLocale,
-    ),
+      // runApp with the real app — splash shows immediately.
+      runApp(
+        CambricApp(
+          services: services,
+          initialThemeMode: initialThemeMode,
+          initialOnboardingComplete: initialOnboardingComplete,
+          initialLocale: initialLocale,
+        ),
+      );
+
+      // Initialize all platform services AFTER runApp.
+      try {
+        await services.initialize();
+      } catch (e, st) {
+        debugPrint('INITIALIZE ERROR: $e\n$st');
+        // App is still running with splash — services.initializedNotifier
+        // was never set to true so splash stays. That's acceptable.
+      }
+    },
+    (Object error, StackTrace stack) {
+      debugPrint('UNCAUGHT ERROR: $error\n$stack');
+    },
   );
+}
 
-  // NOW initialize all platform-channel services, after runApp.
-  // Any crash here shows as a diagnostics error, not an app crash.
-  await services.initialize();
+/// Shown if something fails before runApp — a bare fallback that cannot crash.
+class _ErrorApp extends StatelessWidget {
+  const _ErrorApp({required this.message});
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                const Icon(Icons.error_outline, color: Colors.red, size: 64),
+                const SizedBox(height: 20),
+                const Text(
+                  'C Around failed to start',
+                  style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  message,
+                  style: const TextStyle(color: Colors.red, fontSize: 13),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Please screenshot this and report it.',
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
