@@ -1,7 +1,7 @@
 name: cambric_app
 description: C Around — offline accessibility companion that explains the world around you.
 publish_to: "none"
-version: 1.0.9+10
+version: 1.1.0+11
 
 environment:
   sdk: ">=3.5.0 <4.0.0"
@@ -37,10 +37,10 @@ dependencies:
   sensors_plus: ^6.1.1
   geolocator: ^13.0.2
 
-  # On-device inference.
-  onnxruntime: ^1.4.1
+  # On-device inference — NOTE: onnxruntime and sherpa_onnx removed.
+  # They caused native library crashes on Android (Xiaomi/MIUI and others).
+  # Stubs in lib/core/ai/ keep the API intact while we migrate to TFLite.
   record: ^6.1.2
-  sherpa_onnx: ^1.12.14
   image: ^4.5.4
 
   # Output channels: speech, sound, vibration, screen wake.
@@ -69,9 +69,4 @@ flutter:
   assets:
     - lib/core/config/cambric_config.json
     - assets/branding/icon-512.png
-    - assets/models/yolov8n.onnx
-    - assets/models/yamnet.onnx
-    - assets/models/yamnet_class_map.csv
-    - assets/models/det_500m.onnx
-    - assets/models/w600k_mbf.onnx
     - assets/audio/alarm.wav
