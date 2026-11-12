@@ -22,11 +22,13 @@ android {
     }
 
     packagingOptions {
-        // Keep first copy of any duplicated native libs
+        // onnxruntime and sherpa_onnx both ship libc++_shared.so
         pickFirst("lib/arm64-v8a/libc++_shared.so")
         pickFirst("lib/armeabi-v7a/libc++_shared.so")
         pickFirst("lib/x86/libc++_shared.so")
         pickFirst("lib/x86_64/libc++_shared.so")
+        pickFirst("lib/arm64-v8a/libonnxruntime.so")
+        pickFirst("lib/armeabi-v7a/libonnxruntime.so")
     }
 
     buildTypes {

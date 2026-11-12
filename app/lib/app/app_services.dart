@@ -11,6 +11,7 @@ import '../core/logging/logging_service.dart';
 import '../core/network/connectivity_service.dart';
 import '../core/output/alert_service.dart';
 import '../core/output/announcer.dart';
+import '../core/output/speech_strings.dart';
 import '../core/output/tts_service.dart';
 import '../core/security/app_lock_service.dart';
 import '../core/security/security_service.dart';
@@ -89,6 +90,11 @@ class AppServices {
     if (s == null) throw StateError('call initialize() before accessing settings');
     return s;
   }
+
+  /// Speech strings in the user's chosen voice language.
+  /// Safe to call any time — falls back to English if not initialized.
+  SpeechStrings get speech =>
+      SpeechStrings(_settings?.speechLanguage ?? 'en');
 
   // ── Core services (always available) ─────────────────────────────────────
 

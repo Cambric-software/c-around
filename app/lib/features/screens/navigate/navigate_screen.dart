@@ -139,7 +139,7 @@ class _NavigateScreenState extends State<NavigateScreen> {
     );
     await _loadPlaces();
     if (!mounted) return;
-    await _services.announcer.speakDirect('$trimmed saved.');
+    await _services.announcer.speakDirect(_services.speech.placeSaved(trimmed));
   }
 
   Future<void> _deletePlace(SavedPlace place) async {
@@ -183,8 +183,11 @@ class _NavigateScreenState extends State<NavigateScreen> {
       place.latitude,
       place.longitude,
     );
-    final sentence =
-        '${place.name} is ${_formatDistance(distance)} to the ${_compass(bearing)}.';
+    final sentence = _services.speech.distanceTo(
+        place.name,
+        _formatDistance(distance),
+        _compass(bearing),
+    );
     await _services.announcer.speakDirect(sentence);
   }
 

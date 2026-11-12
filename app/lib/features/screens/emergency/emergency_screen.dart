@@ -35,8 +35,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _services.announcer.speakDirect(
-        'Emergency screen. The alarm, your medical card and your contact are '
-        'here.',
+        _services.speech.emergencyScreenOpened(),
       );
     });
   }
@@ -59,7 +58,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
     if (!mounted) return;
     setState(() => _alarm = true);
     await _services.announcer.speakDirect(
-      'Alarm on. It will keep sounding until you stop it.',
+      _services.speech.alarmStarted(),
       interrupt: true,
     );
   }
@@ -160,7 +159,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
           '${position.longitude.toStringAsFixed(5)} '
           '(accuracy about ${position.accuracy.round()} metres).';
       await Clipboard.setData(ClipboardData(text: text));
-      await _services.announcer.speakDirect('$text Copied to the clipboard.');
+      await _services.announcer.speakDirect(_services.speech.copiedToClipboard(text));
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Location copied to the clipboard')),

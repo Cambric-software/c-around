@@ -126,8 +126,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
       await _services.awareness.refreshPeople();
       await _load();
       await _services.announcer.speakDirect(
-        '${details.name} can now be recognised. This photo and the face '
-        'numbers stay on this device.',
+        _services.speech.personEnrolled(details.name),
       );
     } catch (error) {
       if (!mounted) return;
@@ -355,7 +354,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
     if (trimmed.isEmpty) return;
     await _services.database.markItemSeen(id, trimmed);
     await _load();
-    await _services.announcer.speakDirect('${item.name} is in $trimmed.');
+    await _services.announcer.speakDirect(_services.speech.itemFound(item.name, trimmed));
   }
 
   Future<void> _deleteItem(TrackedItem item) async {
@@ -423,8 +422,10 @@ class _PeopleScreenState extends State<PeopleScreen> {
                                 ? 'Recognised on this device'
                                 : person.relationship,
                             onTap: () => _services.announcer.speakDirect(
-                              '${person.name}'
-                              '${person.relationship.isEmpty ? '' : ', ${person.relationship}'}.',
+                              _services.speech.personNameRelationship(
+                                person.name,
+                                person.relationship,
+                              ),
                             ),
                             trailing: IconButton(
                               tooltip: 'Remove ${person.name}',

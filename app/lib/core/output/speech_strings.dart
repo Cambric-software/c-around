@@ -334,4 +334,64 @@ class SpeechStrings {
     if (_isDe) return 'Einrichtung abgeschlossen. Alles kann in den Einstellungen geändert werden.';
     return 'Setup is done. Everything can be changed in Settings.';
   }
+
+  // ── Emergency screen ─────────────────────────────────────────────────────
+
+  String emergencyScreenOpened() {
+    if (_isAr) return 'شاشة الطوارئ. الإنذار والبطاقة الطبية وجهة الاتصال موجودة هنا.';
+    if (_isFr) return 'Écran d\'urgence. L\'alarme, votre carte médicale et votre contact sont ici.';
+    if (_isDe) return 'Notfallbildschirm. Alarm, Ihre Karte und Ihr Kontakt sind hier.';
+    return 'Emergency screen. The alarm, your medical card and your contact are here.';
+  }
+
+  String alarmStarted() {
+    if (_isAr) return 'الإنذار يعمل. سيستمر حتى تقوم بإيقافه.';
+    if (_isFr) return 'Alarme activée. Elle sonnera jusqu\'à ce que vous l\'arrêtiez.';
+    if (_isDe) return 'Alarm ein. Er klingelt, bis Sie ihn stoppen.';
+    return 'Alarm on. It will keep sounding until you stop it.';
+  }
+
+  String copiedToClipboard(String text) {
+    if (_isAr) return '$text. تم النسخ.';
+    if (_isFr) return '$text. Copié.';
+    if (_isDe) return '$text. Kopiert.';
+    return '$text Copied to the clipboard.';
+  }
+
+  // ── Navigate screen ───────────────────────────────────────────────────────
+
+  String placeSaved(String name) {
+    if (_isAr) return 'تم حفظ $name.';
+    if (_isFr) return '$name enregistré.';
+    if (_isDe) return '$name gespeichert.';
+    return '$name saved.';
+  }
+
+  String itemFound(String name, String place) {
+    if (_isAr) return '$name موجود في $place.';
+    if (_isFr) return '$name se trouve à $place.';
+    if (_isDe) return '$name befindet sich in $place.';
+    return '$name is in $place.';
+  }
+
+  String distanceTo(String name, String distance, String direction) {
+    if (_isAr) return '$name على بعد $distance في اتجاه $direction.';
+    if (_isFr) return '$name est à $distance vers le $direction.';
+    if (_isDe) return '$name ist $distance in Richtung $direction.';
+    return '$name is $distance to the $direction.';
+  }
+
+  // ── People screen ─────────────────────────────────────────────────────────
+
+  String personEnrolled(String name) {
+    if (_isAr) return '$name يمكن التعرف عليه الآن. الصورة والبيانات محفوظة على هذا الجهاز.';
+    if (_isFr) return '$name peut maintenant être reconnu. La photo reste sur cet appareil.';
+    if (_isDe) return '$name kann jetzt erkannt werden. Das Foto bleibt auf diesem Gerät.';
+    return '$name can now be recognised. This photo and the face numbers stay on this device.';
+  }
+
+  String personNameRelationship(String name, String relationship) {
+    if (relationship.isEmpty) return name;
+    return '$name, $relationship.';
+  }
 }
