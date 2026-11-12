@@ -6,21 +6,8 @@ import '../features/screens/navigate/navigate_screen.dart';
 import '../features/screens/people/people_screen.dart';
 import '../features/screens/settings/settings_screen.dart';
 import '../features/screens/talk/talk_screen.dart';
+import '../l10n/app_localizations.dart';
 import 'app_services.dart';
-
-enum _Dest {
-  around(   'Around',    Icons.visibility_outlined,   Icons.visibility_rounded),
-  talk(     'Talk',      Icons.chat_bubble_outline,   Icons.chat_bubble_rounded),
-  people(   'People',    Icons.people_outline,        Icons.people_rounded),
-  navigate( 'Navigate',  Icons.explore_outlined,      Icons.explore_rounded),
-  emergency('Emergency', Icons.emergency_outlined,    Icons.emergency_rounded),
-  settings( 'Settings',  Icons.settings_outlined,     Icons.settings_rounded);
-
-  const _Dest(this.label, this.icon, this.selectedIcon);
-  final String label;
-  final IconData icon;
-  final IconData selectedIcon;
-}
 
 class AppShell extends StatefulWidget {
   const AppShell({
@@ -44,64 +31,65 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _index = 0;
-  _Dest get _dest => _Dest.values[_index];
 
-  Widget _screen() {
-    // Some screens access platform services (camera, awareness, announcer)
-    // that are only initialized after AppServices.initialize() completes.
-    // Show a simple loading view if they are not ready yet.
-    if (!widget.services.isFullyInitialized) {
-      switch (_dest) {
-        case _Dest.around:
-        case _Dest.talk:
-        case _Dest.people:
-        case _Dest.emergency:
-          return _NotReadyScreen(label: _dest.label);
-        default:
-          break;
-      }
+  Widget _screen(int index) {
+    switch (index) {
+      case 0: return AroundScreen(services: widget.services);
+      case 1: return TalkScreen(services: widget.services);
+      case 2: return PeopleScreen(services: widget.services);
+      case 3: return NavigateScreen(services: widget.services);
+      case 4: return EmergencyScreen(services: widget.services);
+      case 5: return SettingsScreen(
+          services:           widget.services,
+          themeMode:          widget.themeMode,
+          onThemeModeChanged: widget.onThemeModeChanged,
+          onReplayOnboarding: widget.onReplayOnboarding,
+          onLocaleChanged:    widget.onLocaleChanged,
+        );
+      default: return AroundScreen(services: widget.services);
     }
+  }
 
-    // Extra guard: awareness/announcer/database may not be set in test mode
-    // even when isFullyInitialized is true (markReadyForTest was called).
+  Widget _buildScreen() {
+    // Guard: if services not fully ready, show loading for hardware screens
+    if (!widget.services.isFullyInitialized) {
+      if (_index < 4) return _NotReadyScreen(label: _label(_index));
+    }
     try {
-      switch (_dest) {
-        case _Dest.around:
-          return AroundScreen(services: widget.services);
-        case _Dest.talk:
-          return TalkScreen(services: widget.services);
-        case _Dest.people:
-          return PeopleScreen(services: widget.services);
-        case _Dest.navigate:
-          return NavigateScreen(services: widget.services);
-        case _Dest.emergency:
-          return EmergencyScreen(services: widget.services);
-        case _Dest.settings:
-          return SettingsScreen(
-            services:           widget.services,
-            themeMode:          widget.themeMode,
-            onThemeModeChanged: widget.onThemeModeChanged,
-            onReplayOnboarding: widget.onReplayOnboarding,
-            onLocaleChanged:    widget.onLocaleChanged,
-          );
-      }
+      return _screen(_index);
     } catch (_) {
-      return _NotReadyScreen(label: _dest.label);
+      return _NotReadyScreen(label: _label(_index));
+    }
+  }
+
+  String _label(int index) {
+    final l = AppLocalizations.of(context);
+    switch (index) {
+      case 0: return l.navAround;
+      case 1: return l.navTalk;
+      case 2: return l.navPeople;
+      case 3: return l.navNavigate;
+      case 4: return l.navEmergency;
+      case 5: return l.navSettings;
+      default: return '';
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final destinations = _Dest.values.map((_Dest d) =>
-      NavigationDestination(
-        icon: Icon(d.icon),
-        selectedIcon: Icon(d.selectedIcon),
-        label: d.label,
-      ),
-    ).toList();
+    final l = AppLocalizations.of(context);
+
+    final destinations = <NavigationDestination>[
+      NavigationDestination(icon: const Icon(Icons.visibility_outlined),    selectedIcon: const Icon(Icons.visibility_rounded),     label: l.navAround),
+      NavigationDestination(icon: const Icon(Icons.chat_bubble_outline),     selectedIcon: const Icon(Icons.chat_bubble_rounded),    label: l.navTalk),
+      NavigationDestination(icon: const Icon(Icons.people_outline),          selectedIcon: const Icon(Icons.people_rounded),         label: l.navPeople),
+      NavigationDestination(icon: const Icon(Icons.explore_outlined),        selectedIcon: const Icon(Icons.explore_rounded),        label: l.navNavigate),
+      NavigationDestination(icon: const Icon(Icons.emergency_outlined),      selectedIcon: const Icon(Icons.emergency_rounded),      label: l.navEmergency),
+      NavigationDestination(icon: const Icon(Icons.settings_outlined),       selectedIcon: const Icon(Icons.settings_rounded),       label: l.navSettings),
+    ];
 
     return Scaffold(
-      body: _screen(),
+      body: _buildScreen(),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (int i) => setState(() => _index = i),
@@ -125,15 +113,7 @@ class _NotReadyScreen extends StatelessWidget {
           children: <Widget>[
             const CircularProgressIndicator(),
             const SizedBox(height: 20),
-            Text(
-              'Starting $label…',
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Loading models and services',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+            Text('Starting $label…', style: Theme.of(context).textTheme.bodyLarge),
           ],
         ),
       ),
